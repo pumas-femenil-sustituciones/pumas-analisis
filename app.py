@@ -363,7 +363,7 @@ if uploaded_file is not None:
             st.write("**Tarjetas**")
             st.dataframe(df_tj, use_container_width=True, hide_index=True)
 
-        st.caption(f"Resumen — Sustituciones: {len(df_subs)} | Goles: {len[df_goles]} | Tarjetas: {len(df_tj)}")
+        st.caption(f"Resumen — Sustituciones: {len(df_subs)} | Goles: {len(df_goles)} | Tarjetas: {len(df_tj)}")
 
         st.subheader("Línea de tiempo (cronología del partido)")
         if not df_tl.empty:
