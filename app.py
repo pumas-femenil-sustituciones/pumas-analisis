@@ -15,39 +15,30 @@ st.write("Sube el PDF del Informe Arbitral para procesarlo y analizarlo.")
 # Utilidades
 # =========================
 def parse_minuto(s: str) -> int:
-    """
-    Convierte '90+3' -> 93, '45' -> 45.
-    Si algo no cuadra, devuelve -1 para marcar revisión.
-    """
-    if s is None:
-        return -1
-    s = s.strip()
+    """Convierte '90+3' -> 93, '45' -> 45. Si no cuadra, devuelve -1."""
     if not s:
         return -1
+    s = s.strip()
     if "+" in s:
-        partes = s.split("+", 1)
         try:
-            base = int(partes[0])
-            extra = int(partes[1])
-            return base + extra
-        except Exception:
+            base, extra = s.split("+", 1)
+            return int(base) + int(extra)
+        except:
             return -1
     try:
         return int(s)
-    except Exception:
+    except:
         return -1
 
 def clean_name(s: str) -> str:
-    """Limpieza básica: quita saltos y espacios repetidos."""
+    """Quita saltos y espacios repetidos."""
     if s is None:
         return ""
     s = s.replace("\n", " ")
-    s = " ".join(s.split())
-    return s
+    return " ".join(s.split()).strip()
 
-# ⚠️ En los informes suele escribirse: "(30) Entra A por (25) Sale B Min: 62"
-# Si en tus PDFs el orden es inverso, pon SUB_ORDER_IN_FIRST = False
-SUB_ORDER_IN_FIRST = True
+# ⚠️ Tus informes usan "SALE por ENTRA" → ponemos False
+SUB_ORDER_IN_FIRST = False
 
 # =========================
 # 1) Cargador de PDF
@@ -68,13 +59,9 @@ if uploaded_file is not None:
 
             page_to_read = st.number_input(
                 "¿Qué página quieres leer?",
-                min_value=1,
-                max_value=num_pages,
-                value=default_page,
-                step=1,
+                min_value=1, max_value=num_pages, value=default_page, step=1
             )
 
-            # Extraer texto de la página seleccionada
             raw_text = pdf.pages[page_to_read - 1].extract_text() or ""
 
         # =========================
@@ -83,7 +70,6 @@ if uploaded_file is not None:
         if raw_text.strip():
             st.subheader("Texto extraído")
             st.text_area("Contenido", unidecode(raw_text), height=300)
-
             st.download_button(
                 label="Descargar texto extraído (.txt)",
                 data=unidecode(raw_text),
@@ -97,106 +83,105 @@ if uploaded_file is not None:
             )
 
         # =========================
-        # 4) Normalización y Patrones (evitan capturar 'Min:' en el nombre)
+        # 4) Normalización y Patrones
         # =========================
-        # Unificamos espacios/saltos para que el regex sea robusto
         norm_text = re.sub(r"\s+", " ", raw_text or "").strip()
 
-        # Nombres: todo hasta 'por' o 'Min:' sin incluir 'Min:' (tempered dot)
-        pat_gol = re.compile(
+        GOL = re.compile(
             r"Gol de\s*\((\d+)\)\s+((?:(?!\bMin:).)+?)\s+Min:\s*(\d+(?:\+\d+)?)",
             re.IGNORECASE
         )
-        pat_tarjeta = re.compile(
+        TARJ = re.compile(
             r"(Amarilla|Roja(?:\s*\(.*?\))?|Roja\s*Directa)\s*de\s*\((\d+)\)\s+((?:(?!\bMin:).)+?)\s+Min:\s*(\d+(?:\+\d+)?)",
             re.IGNORECASE
         )
-        pat_sub = re.compile(
+        # (SALE) Nombre B por (ENTRA) Nombre A Min:X
+        SUB = re.compile(
             r"\((\d+)\)\s+((?:(?!\bMin:).)+?)\s+por\s+\((\d+)\)\s+((?:(?!\bMin:).)+?)\s+Min:\s*(\d+(?:\+\d+)?)",
             re.IGNORECASE
         )
 
         # =========================
-        # 5) Parsing de eventos
+        # 5) Escáner secuencial
         # =========================
+        goles, tarjetas, subs = [], [], []
+        i = 0
+        N = len(norm_text)
 
-        # --- Goles ---
-        goles = []
-        for m in pat_gol.finditer(norm_text):
-            dorsal = m.group(1)
-            nombre = clean_name(m.group(2)).replace("Min:", "").strip()
-            minuto_str = m.group(3)
-            goles.append(
-                {
+        while i < N:
+            mg = GOL.search(norm_text, i)
+            mt = TARJ.search(norm_text, i)
+            ms = SUB.search(norm_text, i)
+
+            candidates = []
+            if mg: candidates.append(("GOL", mg.start(), mg))
+            if mt: candidates.append(("TARJ", mt.start(), mt))
+            if ms: candidates.append(("SUB", ms.start(), ms))
+            if not candidates:
+                break
+
+            tipo, _, m = sorted(candidates, key=lambda x: x[1])[0]
+
+            if tipo == "GOL":
+                dorsal = m.group(1)
+                nombre = clean_name(m.group(2)).replace("Min:", "").strip()
+                minuto_str = m.group(3)
+                goles.append({
                     "dorsal": dorsal,
                     "jugadora": nombre,
                     "minuto_txt": minuto_str,
                     "minuto": parse_minuto(minuto_str),
-                }
-            )
-        df_goles = (
-            pd.DataFrame(goles).sort_values("minuto")
-            if goles
-            else pd.DataFrame(columns=["dorsal", "jugadora", "minuto_txt", "minuto"])
-        )
-
-        # --- Tarjetas ---
-        tarjetas = []
-        for m in pat_tarjeta.finditer(norm_text):
-            tipo = clean_name(m.group(1))
-            dorsal = m.group(2)
-            nombre = clean_name(m.group(3)).replace("Min:", "").strip()
-            minuto_str = m.group(4)
-            tarjetas.append(
-                {
-                    "tipo": tipo,
+                })
+            elif tipo == "TARJ":
+                tipo_t = clean_name(m.group(1))
+                dorsal = m.group(2)
+                nombre = clean_name(m.group(3)).replace("Min:", "").strip()
+                minuto_str = m.group(4)
+                tarjetas.append({
+                    "tipo": tipo_t,
                     "dorsal": dorsal,
                     "jugadora": nombre,
                     "minuto_txt": minuto_str,
                     "minuto": parse_minuto(minuto_str),
-                }
-            )
-        df_tarjetas = (
-            pd.DataFrame(tarjetas).sort_values(["minuto", "tipo"])
-            if tarjetas
-            else pd.DataFrame(columns=["tipo", "dorsal", "jugadora", "minuto_txt", "minuto"])
-        )
+                })
+            else:  # SUB (SALE por ENTRA)
+                sale_dorsal = m.group(1)
+                sale_nombre = clean_name(m.group(2)).replace("Min:", "").strip()
+                entra_dorsal = m.group(3)
+                entra_nombre = clean_name(m.group(4)).replace("Min:", "").strip()
+                minuto_str = m.group(5)
 
-        # --- Sustituciones ---
-        subs = []
-        for m in pat_sub.finditer(norm_text):
-            dorsal_a = m.group(1)
-            nombre_a = clean_name(m.group(2)).replace("Min:", "").strip()
-            dorsal_b = m.group(3)
-            nombre_b = clean_name(m.group(4)).replace("Min:", "").strip()
-            minuto_str = m.group(5)
-
-            if SUB_ORDER_IN_FIRST:
-                entra_dorsal, entra_nombre = dorsal_a, nombre_a
-                sale_dorsal, sale_nombre = dorsal_b, nombre_b
-            else:
-                entra_dorsal, entra_nombre = dorsal_b, nombre_b
-                sale_dorsal, sale_nombre = dorsal_a, nombre_a
-
-            subs.append(
-                {
+                # Como SUB_ORDER_IN_FIRST=False, guardamos como entra/sale correcto
+                subs.append({
                     "entra_dorsal": entra_dorsal,
                     "entra": entra_nombre,
                     "sale_dorsal": sale_dorsal,
                     "sale": sale_nombre,
                     "minuto_txt": minuto_str,
                     "minuto": parse_minuto(minuto_str),
-                }
-            )
+                })
+
+            i = m.end()
+
+        # =========================
+        # 6) DataFrames
+        # =========================
+        df_goles = (
+            pd.DataFrame(goles).sort_values("minuto")
+            if goles else pd.DataFrame(columns=["dorsal", "jugadora", "minuto_txt", "minuto"])
+        )
+        df_tarjetas = (
+            pd.DataFrame(tarjetas).sort_values(["minuto", "tipo"])
+            if tarjetas else pd.DataFrame(columns=["tipo", "dorsal", "jugadora", "minuto_txt", "minuto"])
+        )
         df_subs = (
             pd.DataFrame(subs)[["entra_dorsal", "entra", "sale_dorsal", "sale", "minuto_txt", "minuto"]]
             .sort_values("minuto")
-            if subs
-            else pd.DataFrame(columns=["entra_dorsal", "entra", "sale_dorsal", "sale", "minuto_txt", "minuto"])
+            if subs else pd.DataFrame(columns=["entra_dorsal", "entra", "sale_dorsal", "sale", "minuto_txt", "minuto"])
         )
 
         # =========================
-        # 6) Mostrar tablas
+        # 7) Mostrar tablas
         # =========================
         st.divider()
         st.subheader("Eventos detectados")
