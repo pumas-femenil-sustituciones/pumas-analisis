@@ -363,13 +363,107 @@ if uploaded_file is not None:
             st.write("**Tarjetas**")
             st.dataframe(df_tj, use_container_width=True, hide_index=True)
 
-        st.caption(f"Resumen — Sustituciones: {len(df_subs)} | Goles: {len(df_goles)} | Tarjetas: {len(df_tj)}")
+        st.caption(f"Resumen — Sustituciones: {len(df_subs)} | Goles: {len[df_goles]} | Tarjetas: {len(df_tj)}")
 
         st.subheader("Línea de tiempo (cronología del partido)")
         if not df_tl.empty:
             st.dataframe(df_tl.drop(columns=["order"]), use_container_width=True, hide_index=True)
         else:
             st.info("No se detectaron eventos para la línea de tiempo.")
+
+        # =========================
+        # 6) Marcador al momento del cambio e Impacto (USANDO my_team/opp_team)
+        # =========================
+        st.divider()
+        st.subheader("Marcador al momento del cambio e impacto")
+
+        def build_score_series(goals_df: pd.DataFrame, my_team: str, opp_team: str):
+            """
+            Devuelve lista de tuplas (minuto, goles_my, goles_opp) ordenadas por minuto.
+            Requiere columnas: 'minuto' (int) y 'equipo' (my_team/opp_team).
+            """
+            if goals_df.empty or "equipo" not in goals_df.columns:
+                return []
+            g = goals_df.sort_values("minuto").reset_index(drop=True)
+            series = []
+            my, opp = 0, 0
+            for _, row in g.iterrows():
+                if row["equipo"] == my_team:
+                    my += 1
+                elif row["equipo"] == opp_team:
+                    opp += 1
+                series.append((int(row["minuto"]), my, opp))
+            return series
+
+        def score_at(series, t: int):
+            """Marcador hasta el minuto t (inclusive)."""
+            my, opp = 0, 0
+            for m, s_my, s_opp in series:
+                if m <= t:
+                    my, opp = s_my, s_opp
+                else:
+                    break
+            return my, opp
+
+        # Construye la serie de marcador acumulado
+        score_series = build_score_series(df_goles_edit, my_team, opp_team)
+
+        impacto_rows = []
+        if not df_subs_edit.empty:
+            # Solo calculamos impacto para cambios de my_team
+            subs_my = df_subs_edit[df_subs_edit["equipo"] == my_team].copy().reset_index(drop=True)
+
+            for _, row in subs_my.iterrows():
+                t = int(row["minuto"])
+                w_end = t + int(ventana_min)
+
+                # Marcador al momento del cambio
+                my_t, opp_t = score_at(score_series, t)
+                marcador_momento = f"{my_t}-{opp_t}"
+                if my_t > opp_t:
+                    game_state = "Ganando"
+                elif my_t < opp_t:
+                    game_state = "Perdiendo"
+                else:
+                    game_state = "Empatando"
+
+                # Goles en (t, t+ventana]
+                my_post = 0
+                opp_post = 0
+                if not df_goles_edit.empty:
+                    for _, g in df_goles_edit.iterrows():
+                        gmin = int(g["minuto"])
+                        if t < gmin <= w_end:
+                            if g["equipo"] == my_team:
+                                my_post += 1
+                            elif g["equipo"] == opp_team:
+                                opp_post += 1
+
+                impacto = my_post - opp_post
+
+                impacto_rows.append({
+                    "minuto_cambio": t,
+                    "entra": row["entra"],
+                    "sale": row["sale"],
+                    "equipo_cambio": my_team,
+                    "marcador_momento": marcador_momento,
+                    "game_state": game_state,
+                    "ventana": f"{t+1}-{w_end}",
+                    "goles_mi_equipo_post": my_post,
+                    "goles_rival_post": opp_post,
+                    "impacto": impacto
+                })
+
+        df_impacto = (pd.DataFrame(impacto_rows)
+                      if impacto_rows else pd.DataFrame(columns=[
+                          "minuto_cambio","entra","sale","equipo_cambio","marcador_momento",
+                          "game_state","ventana","goles_mi_equipo_post","goles_rival_post","impacto"
+                      ]))
+
+        if not df_impacto.empty:
+            st.dataframe(df_impacto.sort_values("minuto_cambio"), use_container_width=True, hide_index=True)
+        else:
+            st.info("Marca arriba los **goles de cada equipo** y las **sustituciones de tu equipo** para calcular el impacto.")
 
     except Exception as e:
         st.error(f"No se pudo leer o procesar el PDF. Detalle técnico: {e}")
