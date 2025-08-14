@@ -41,7 +41,7 @@ def clean_name(s: str) -> str:
 SUB_ORDER_IN_FIRST = False
 
 # =========================
-# Parámetros en sidebar (por ahora informativos)
+# Parámetros en sidebar (informativos)
 # =========================
 st.sidebar.header("Parámetros")
 pumas_side = st.sidebar.selectbox("¿Quién es Pumas?", ["Local", "Visitante"], index=0)
@@ -184,69 +184,66 @@ if uploaded_file is not None:
                        if timeline else pd.DataFrame(columns=["minuto", "minuto_txt", "evento", "detalle"]))
 
         # =========================
-        # 7) NUEVO — Asignación rápida de equipos (resuelve tus 2 puntos)
+        # 7) Multiselects para determinar equipo y autogoles
         # =========================
         st.divider()
-        st.subheader("Asignar equipos a los eventos (rápido)")
+        st.subheader("Asignar equipos a los eventos")
 
-        # Goles: multiselect de goles del Rival
-        goal_options = [f"{i+1}. {row['minuto_txt']} — {row['jugadora']} ({row['dorsal']})"
-                        for i, row in df_goles.reset_index(drop=True).iterrows()]
-        # Default: primer gol Rival (índice 0), solo la 1a vez
-        if "goal_rival_sel" not in st.session_state:
-            st.session_state.goal_rival_sel = [0] if len(goal_options) >= 1 else []
-        goal_rival_sel = st.multiselect(
-            "Marca los **goles del Rival**",
-            options=list(range(len(goal_options))),
-            default=st.session_state.goal_rival_sel,
-            format_func=lambda idx: goal_options[idx],
-            key="ms_goals_rival",
-        )
+        # --- Goles ---
+        if not df_goles.empty:
+            goal_labels = [f"{i+1}. {row['minuto_txt']} — {row['jugadora']} ({row['dorsal']})"
+                           for i, row in df_goles.reset_index(drop=True).iterrows()]
+            idx_range_goals = list(range(len(goal_labels)))
 
-        # Sustituciones: multiselect de cambios del Rival
-        sub_options = [f"{i+1}. Min {row['minuto']} — Entra {row['entra']} por {row['sale']}"
-                       for i, row in df_subs.reset_index(drop=True).iterrows()]
-        # Default: filas 4,7,8,9 Rival (índices base-0 -> 3,6,7,8), solo la 1a vez
-        if "sub_rival_sel" not in st.session_state:
-            predef = []
-            for idx in [3, 6, 7, 8]:
-                if idx < len(sub_options):
-                    predef.append(idx)
-            st.session_state.sub_rival_sel = predef
-        sub_rival_sel = st.multiselect(
-            "Marca las **sustituciones del Rival**",
-            options=list(range(len(sub_options))),
-            default=st.session_state.sub_rival_sel,
-            format_func=lambda idx: sub_options[idx],
-            key="ms_subs_rival",
-        )
+            goles_rival_idx = st.multiselect(
+                "Selecciona **goles del Rival** (los no seleccionados se marcan como Pumas)",
+                options=idx_range_goals,
+                default=[],  # SIN defaults fijos
+                format_func=lambda i: goal_labels[i]
+            )
 
-        # Construimos df_goles_edit / df_subs_edit con la etiqueta de equipo
-        df_goles_edit = df_goles.copy()
-        if not df_goles_edit.empty:
-            df_goles_edit["equipo"] = "Pumas"
-            for idx in goal_rival_sel:
-                if 0 <= idx < len(df_goles_edit):
-                    df_goles_edit.iloc[idx, df_goles_edit.columns.get_loc("equipo")] = "Rival"
+            autogoles_idx = st.multiselect(
+                "¿Alguno fue **autogol**? (marca los que lo fueron)",
+                options=idx_range_goals,
+                default=[],
+                format_func=lambda i: goal_labels[i],
+                help="Se marca la bandera 'autogol' para referencia. El equipo beneficiado es el que selecciones arriba."
+            )
 
-        df_subs_edit = df_subs.copy()
-        if not df_subs_edit.empty:
-            df_subs_edit["equipo"] = "Pumas"
-            for idx in sub_rival_sel:
-                if 0 <= idx < len(df_subs_edit):
-                    df_subs_edit.iloc[idx, df_subs_edit.columns.get_loc("equipo")] = "Rival"
+            df_goles_edit = df_goles.copy().reset_index(drop=True)
+            df_goles_edit["equipo"] = ["Rival" if i in goles_rival_idx else "Pumas" for i in idx_range_goals]
+            df_goles_edit["autogol"] = [i in autogoles_idx for i in idx_range_goals]
 
-        # Mostrar cómo quedó la asignación
-        colA, colB = st.columns(2)
-        with colA:
-            st.write("**Goles (con equipo asignado)**")
+            st.write("**Goles (con equipo y autogol)**")
             st.dataframe(df_goles_edit, use_container_width=True, hide_index=True)
-        with colB:
-            st.write("**Sustituciones (con equipo asignado)**")
+        else:
+            df_goles_edit = df_goles
+            st.info("No se detectaron goles.")
+
+        # --- Sustituciones ---
+        if not df_subs.empty:
+            sub_labels = [f"{i+1}. Min {row['minuto']} — Entra {row['entra']} por {row['sale']}"
+                          for i, row in df_subs.reset_index(drop=True).iterrows()]
+            idx_range_subs = list(range(len(sub_labels)))
+
+            subs_rival_idx = st.multiselect(
+                "Selecciona **sustituciones del Rival** (las no seleccionadas se marcan como Pumas)",
+                options=idx_range_subs,
+                default=[],  # SIN defaults fijos
+                format_func=lambda i: sub_labels[i]
+            )
+
+            df_subs_edit = df_subs.copy().reset_index(drop=True)
+            df_subs_edit["equipo"] = ["Rival" if i in subs_rival_idx else "Pumas" for i in idx_range_subs]
+
+            st.write("**Sustituciones (con equipo)**")
             st.dataframe(df_subs_edit, use_container_width=True, hide_index=True)
+        else:
+            df_subs_edit = df_subs
+            st.info("No se detectaron sustituciones.")
 
         # =========================
-        # 8) Tablas base + Línea de tiempo (igual que antes)
+        # 8) Tablas base + Línea de tiempo (referencia)
         # =========================
         st.divider()
         st.subheader("Eventos detectados (base)")
@@ -269,10 +266,8 @@ if uploaded_file is not None:
         else:
             st.info("No se detectaron eventos para la línea de tiempo.")
 
-        # =========================
-        # Nota: el cálculo de marcador/impacto lo revisamos después,
-        # cuando confirmes que estos dos puntos ya están correctos.
-        # =========================
+        # Nota: Dejamos el cálculo de marcador/impacto para el siguiente paso
+        # una vez confirmes que las asignaciones por multiselect quedaron bien.
 
     except Exception as e:
         st.error(f"No se pudo leer o procesar el PDF. Detalle técnico: {e}")
