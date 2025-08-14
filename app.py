@@ -49,17 +49,6 @@ def clean_name(s: str) -> str:
 # Si en tus PDFs el orden es inverso, pon SUB_ORDER_IN_FIRST = False
 SUB_ORDER_IN_FIRST = True
 
-# Patrones Regex (robustos para Informe Arbitral)
-pat_gol = re.compile(r"Gol de\s*\((\d+)\)\s+(.+?)\s+Min:\s*(\d+(?:\+\d+)?)", re.IGNORECASE)
-pat_tarjeta = re.compile(
-    r"(Amarilla|Roja(?:\s*\(.*?\))?|Roja\s*Directa)\s*de\s*\((\d+)\)\s+(.+?)\s+Min:\s*(\d+(?:\+\d+)?)",
-    re.IGNORECASE
-)
-pat_sub = re.compile(
-    r"\((\d+)\)\s+(.+?)\s+por\s+\((\d+)\)\s+(.+?)\s+Min:\s*(\d+(?:\+\d+)?)",
-    re.IGNORECASE
-)
-
 # =========================
 # 1) Cargador de PDF
 # =========================
@@ -108,15 +97,34 @@ if uploaded_file is not None:
             )
 
         # =========================
-        # 4) Parsing de eventos
+        # 4) Normalización y Patrones (evitan capturar 'Min:' en el nombre)
         # =========================
-        text = raw_text if raw_text else ""
+        # Unificamos espacios/saltos para que el regex sea robusto
+        norm_text = re.sub(r"\s+", " ", raw_text or "").strip()
+
+        # Nombres: todo hasta 'por' o 'Min:' sin incluir 'Min:' (tempered dot)
+        pat_gol = re.compile(
+            r"Gol de\s*\((\d+)\)\s+((?:(?!\bMin:).)+?)\s+Min:\s*(\d+(?:\+\d+)?)",
+            re.IGNORECASE
+        )
+        pat_tarjeta = re.compile(
+            r"(Amarilla|Roja(?:\s*\(.*?\))?|Roja\s*Directa)\s*de\s*\((\d+)\)\s+((?:(?!\bMin:).)+?)\s+Min:\s*(\d+(?:\+\d+)?)",
+            re.IGNORECASE
+        )
+        pat_sub = re.compile(
+            r"\((\d+)\)\s+((?:(?!\bMin:).)+?)\s+por\s+\((\d+)\)\s+((?:(?!\bMin:).)+?)\s+Min:\s*(\d+(?:\+\d+)?)",
+            re.IGNORECASE
+        )
+
+        # =========================
+        # 5) Parsing de eventos
+        # =========================
 
         # --- Goles ---
         goles = []
-        for m in pat_gol.finditer(text):
+        for m in pat_gol.finditer(norm_text):
             dorsal = m.group(1)
-            nombre = clean_name(m.group(2))
+            nombre = clean_name(m.group(2)).replace("Min:", "").strip()
             minuto_str = m.group(3)
             goles.append(
                 {
@@ -134,10 +142,10 @@ if uploaded_file is not None:
 
         # --- Tarjetas ---
         tarjetas = []
-        for m in pat_tarjeta.finditer(text):
+        for m in pat_tarjeta.finditer(norm_text):
             tipo = clean_name(m.group(1))
             dorsal = m.group(2)
-            nombre = clean_name(m.group(3))
+            nombre = clean_name(m.group(3)).replace("Min:", "").strip()
             minuto_str = m.group(4)
             tarjetas.append(
                 {
@@ -156,11 +164,11 @@ if uploaded_file is not None:
 
         # --- Sustituciones ---
         subs = []
-        for m in pat_sub.finditer(text):
+        for m in pat_sub.finditer(norm_text):
             dorsal_a = m.group(1)
-            nombre_a = clean_name(m.group(2))
+            nombre_a = clean_name(m.group(2)).replace("Min:", "").strip()
             dorsal_b = m.group(3)
-            nombre_b = clean_name(m.group(4))
+            nombre_b = clean_name(m.group(4)).replace("Min:", "").strip()
             minuto_str = m.group(5)
 
             if SUB_ORDER_IN_FIRST:
@@ -181,13 +189,14 @@ if uploaded_file is not None:
                 }
             )
         df_subs = (
-            pd.DataFrame(subs).sort_values("minuto")
+            pd.DataFrame(subs)[["entra_dorsal", "entra", "sale_dorsal", "sale", "minuto_txt", "minuto"]]
+            .sort_values("minuto")
             if subs
             else pd.DataFrame(columns=["entra_dorsal", "entra", "sale_dorsal", "sale", "minuto_txt", "minuto"])
         )
 
         # =========================
-        # 5) Mostrar tablas
+        # 6) Mostrar tablas
         # =========================
         st.divider()
         st.subheader("Eventos detectados")
