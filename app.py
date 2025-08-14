@@ -37,13 +37,13 @@ def clean_name(s: str) -> str:
     s = s.replace("\n", " ")
     return " ".join(s.split()).strip()
 
-# Tus informes usan "SALE por ENTRA" → ponemos False
+# En tus informes: "SALE por ENTRA"
 SUB_ORDER_IN_FIRST = False
 
 # =========================
-# Sidebar (parámetros)
+# Parámetros en sidebar (por ahora informativos)
 # =========================
-st.sidebar.header("Parámetros del análisis")
+st.sidebar.header("Parámetros")
 pumas_side = st.sidebar.selectbox("¿Quién es Pumas?", ["Local", "Visitante"], index=0)
 ventana_min = st.sidebar.number_input("Ventana post-cambio (min)", min_value=5, max_value=30, value=10, step=1)
 
@@ -109,7 +109,7 @@ if uploaded_file is not None:
         )
 
         # =========================
-        # 5) Escáner secuencial (y línea de tiempo)
+        # 5) Escáner secuencial -> eventos
         # =========================
         goles, tarjetas, subs = [], [], []
         timeline = []
@@ -174,27 +174,88 @@ if uploaded_file is not None:
         # =========================
         df_goles = (pd.DataFrame(goles).sort_values("minuto")
                     if goles else pd.DataFrame(columns=["dorsal", "jugadora", "minuto_txt", "minuto"]))
-        df_tarjetas = (pd.DataFrame(tarjetas).sort_values(["minuto", "tipo"])
-                       if tarjetas else pd.DataFrame(columns=["tipo", "dorsal", "jugadora", "minuto_txt", "minuto"]))
         df_subs = (pd.DataFrame(subs)[["entra_dorsal", "entra", "sale_dorsal", "sale", "minuto_txt", "minuto"]]
                    .sort_values("minuto")
                    if subs else pd.DataFrame(columns=["entra_dorsal", "entra", "sale_dorsal", "sale", "minuto_txt", "minuto"]))
+        df_tarjetas = (pd.DataFrame(tarjetas).sort_values(["minuto", "tipo"])
+                       if tarjetas else pd.DataFrame(columns=["tipo", "dorsal", "jugadora", "minuto_txt", "minuto"]))
         df_timeline = (pd.DataFrame(timeline)[["minuto", "minuto_txt", "evento", "detalle", "order"]]
                        .sort_values(["minuto", "order"])
                        if timeline else pd.DataFrame(columns=["minuto", "minuto_txt", "evento", "detalle"]))
 
         # =========================
-        # 7) Mostrar tablas
+        # 7) NUEVO — Asignación rápida de equipos (resuelve tus 2 puntos)
         # =========================
         st.divider()
-        st.subheader("Eventos detectados")
+        st.subheader("Asignar equipos a los eventos (rápido)")
 
+        # Goles: multiselect de goles del Rival
+        goal_options = [f"{i+1}. {row['minuto_txt']} — {row['jugadora']} ({row['dorsal']})"
+                        for i, row in df_goles.reset_index(drop=True).iterrows()]
+        # Default: primer gol Rival (índice 0), solo la 1a vez
+        if "goal_rival_sel" not in st.session_state:
+            st.session_state.goal_rival_sel = [0] if len(goal_options) >= 1 else []
+        goal_rival_sel = st.multiselect(
+            "Marca los **goles del Rival**",
+            options=list(range(len(goal_options))),
+            default=st.session_state.goal_rival_sel,
+            format_func=lambda idx: goal_options[idx],
+            key="ms_goals_rival",
+        )
+
+        # Sustituciones: multiselect de cambios del Rival
+        sub_options = [f"{i+1}. Min {row['minuto']} — Entra {row['entra']} por {row['sale']}"
+                       for i, row in df_subs.reset_index(drop=True).iterrows()]
+        # Default: filas 4,7,8,9 Rival (índices base-0 -> 3,6,7,8), solo la 1a vez
+        if "sub_rival_sel" not in st.session_state:
+            predef = []
+            for idx in [3, 6, 7, 8]:
+                if idx < len(sub_options):
+                    predef.append(idx)
+            st.session_state.sub_rival_sel = predef
+        sub_rival_sel = st.multiselect(
+            "Marca las **sustituciones del Rival**",
+            options=list(range(len(sub_options))),
+            default=st.session_state.sub_rival_sel,
+            format_func=lambda idx: sub_options[idx],
+            key="ms_subs_rival",
+        )
+
+        # Construimos df_goles_edit / df_subs_edit con la etiqueta de equipo
+        df_goles_edit = df_goles.copy()
+        if not df_goles_edit.empty:
+            df_goles_edit["equipo"] = "Pumas"
+            for idx in goal_rival_sel:
+                if 0 <= idx < len(df_goles_edit):
+                    df_goles_edit.iloc[idx, df_goles_edit.columns.get_loc("equipo")] = "Rival"
+
+        df_subs_edit = df_subs.copy()
+        if not df_subs_edit.empty:
+            df_subs_edit["equipo"] = "Pumas"
+            for idx in sub_rival_sel:
+                if 0 <= idx < len(df_subs_edit):
+                    df_subs_edit.iloc[idx, df_subs_edit.columns.get_loc("equipo")] = "Rival"
+
+        # Mostrar cómo quedó la asignación
+        colA, colB = st.columns(2)
+        with colA:
+            st.write("**Goles (con equipo asignado)**")
+            st.dataframe(df_goles_edit, use_container_width=True, hide_index=True)
+        with colB:
+            st.write("**Sustituciones (con equipo asignado)**")
+            st.dataframe(df_subs_edit, use_container_width=True, hide_index=True)
+
+        # =========================
+        # 8) Tablas base + Línea de tiempo (igual que antes)
+        # =========================
+        st.divider()
+        st.subheader("Eventos detectados (base)")
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.write("**Sustituciones (sin equipo asignado aún)**")
+            st.write("**Sustituciones (base)**")
             st.dataframe(df_subs, use_container_width=True, hide_index=True)
         with col2:
-            st.write("**Goles (sin equipo asignado aún)**")
+            st.write("**Goles (base)**")
             st.dataframe(df_goles, use_container_width=True, hide_index=True)
         with col3:
             st.write("**Tarjetas**")
@@ -209,141 +270,9 @@ if uploaded_file is not None:
             st.info("No se detectaron eventos para la línea de tiempo.")
 
         # =========================
-        # 8) Asignar equipos (Pumas / Rival) para goles y sustituciones
+        # Nota: el cálculo de marcador/impacto lo revisamos después,
+        # cuando confirmes que estos dos puntos ya están correctos.
         # =========================
-        st.divider()
-        st.subheader("Asignar equipos a los eventos")
-
-        # Goles: agregar columna 'equipo' editable
-        if not df_goles.empty:
-            df_goles_edit = df_goles.copy()
-            if "equipo" not in df_goles_edit.columns:
-                df_goles_edit["equipo"] = "Pumas"  # valor por defecto; puedes cambiarlo
-            df_goles_edit = st.data_editor(
-                df_goles_edit,
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "equipo": st.column_config.SelectboxColumn(
-                        "equipo (gol)",
-                        options=["Pumas", "Rival"],
-                        help="Indica si el gol fue de Pumas o del Rival",
-                        default="Pumas",
-                    )
-                }
-            )
-        else:
-            df_goles_edit = df_goles
-
-        # Sustituciones: agregar columna 'equipo' editable
-        if not df_subs.empty:
-            df_subs_edit = df_subs.copy()
-            if "equipo" not in df_subs_edit.columns:
-                df_subs_edit["equipo"] = "Pumas"  # por defecto
-            df_subs_edit = st.data_editor(
-                df_subs_edit,
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "equipo": st.column_config.SelectboxColumn(
-                        "equipo (cambio)",
-                        options=["Pumas", "Rival"],
-                        help="Indica qué equipo realizó la sustitución",
-                        default="Pumas",
-                    )
-                }
-            )
-        else:
-            df_subs_edit = df_subs
-
-        # =========================
-        # 9) Marcador minuto a minuto y estado al cambio
-        # =========================
-        st.divider()
-        st.subheader("Marcador al momento del cambio e impacto")
-
-        # Construir marcador acumulado a partir de goles etiquetados
-        def build_score_series(goals_df):
-            # goals_df: requiere columnas 'minuto' y 'equipo'
-            goals_sorted = goals_df.sort_values("minuto").reset_index(drop=True)
-            series = []  # lista de (minuto, pumas, rival)
-            pumas = 0
-            rival = 0
-            for _, row in goals_sorted.iterrows():
-                if row.get("equipo") == "Pumas":
-                    pumas += 1
-                elif row.get("equipo") == "Rival":
-                    rival += 1
-                series.append((int(row["minuto"]), pumas, rival))
-            return series
-
-        score_series = build_score_series(df_goles_edit) if not df_goles_edit.empty else []
-
-        def score_at(minuto):
-            """Devuelve (pumas, rival) hasta ese minuto inclusive."""
-            p, r = 0, 0
-            for m, sp, sr in score_series:
-                if m <= minuto:
-                    p, r = sp, sr
-                else:
-                    break
-            return p, r
-
-        # =========================
-        # 10) Impacto por sustitución (solo Pumas)
-        # =========================
-        impacto_rows = []
-        if not df_subs_edit.empty:
-            subs_pumas = df_subs_edit[df_subs_edit["equipo"] == "Pumas"].copy().reset_index(drop=True)
-
-            for _, row in subs_pumas.iterrows():
-                t = int(row["minuto"])
-                w_end = t + int(ventana_min)
-
-                # Marcador al momento del cambio
-                p_t, r_t = score_at(t)
-                marcador_momento = f"{p_t}-{r_t}"
-                game_state = "Empatando"
-                if p_t > r_t:
-                    game_state = "Ganando"
-                elif p_t < r_t:
-                    game_state = "Perdiendo"
-
-                # Goles en la ventana posterior (t, w_end]
-                p_post = 0
-                r_post = 0
-                for _, g in df_goles_edit.iterrows():
-                    gmin = int(g["minuto"])
-                    if t < gmin <= w_end:
-                        if g["equipo"] == "Pumas":
-                            p_post += 1
-                        elif g["equipo"] == "Rival":
-                            r_post += 1
-
-                impacto = p_post - r_post
-
-                impacto_rows.append({
-                    "minuto_cambio": t,
-                    "entra": row["entra"],
-                    "sale": row["sale"],
-                    "marcador_momento": marcador_momento,
-                    "game_state": game_state,
-                    "ventana": f"{t+1}-{w_end}",
-                    "goles_pumas_post": p_post,
-                    "goles_rival_post": r_post,
-                    "impacto": impacto
-                })
-
-        df_impacto = (pd.DataFrame(impacto_rows)
-                      if impacto_rows else pd.DataFrame(columns=[
-                          "minuto_cambio","entra","sale","marcador_momento","game_state",
-                          "ventana","goles_pumas_post","goles_rival_post","impacto"
-                      ]))
-
-        if not df_impacto.empty:
-            st.dataframe(df_impacto.sort_values("minuto_cambio"), use_container_width=True, hide_index=True)
-        else:
-            st.info("Asigna equipos a goles y sustituciones arriba para calcular el impacto (solo cambios de Pumas).")
 
     except Exception as e:
         st.error(f"No se pudo leer o procesar el PDF. Detalle técnico: {e}")
