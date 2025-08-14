@@ -37,7 +37,7 @@ def clean_name(s: str) -> str:
     s = s.replace("\n", " ")
     return " ".join(s.split()).strip()
 
-# ⚠️ Tus informes usan "SALE por ENTRA" → ponemos False
+# Tus informes usan "SALE por ENTRA" → ponemos False
 SUB_ORDER_IN_FIRST = False
 
 # =========================
@@ -102,12 +102,14 @@ if uploaded_file is not None:
         )
 
         # =========================
-        # 5) Escáner secuencial
+        # 5) Escáner secuencial (y construimos línea de tiempo)
         # =========================
         goles, tarjetas, subs = [], [], []
+        timeline = []  # para la cronología única
+        order_counter = 0
+
         i = 0
         N = len(norm_text)
-
         while i < N:
             mg = GOL.search(norm_text, i)
             mt = TARJ.search(norm_text, i)
@@ -125,42 +127,52 @@ if uploaded_file is not None:
             if tipo == "GOL":
                 dorsal = m.group(1)
                 nombre = clean_name(m.group(2)).replace("Min:", "").strip()
-                minuto_str = m.group(3)
+                minuto_txt = m.group(3)
+                minuto = parse_minuto(minuto_txt)
                 goles.append({
-                    "dorsal": dorsal,
-                    "jugadora": nombre,
-                    "minuto_txt": minuto_str,
-                    "minuto": parse_minuto(minuto_str),
+                    "dorsal": dorsal, "jugadora": nombre,
+                    "minuto_txt": minuto_txt, "minuto": minuto
                 })
+                timeline.append({
+                    "order": order_counter, "minuto": minuto, "minuto_txt": minuto_txt,
+                    "evento": "Gol", "detalle": f"Gol de ({dorsal}) {nombre}"
+                })
+
             elif tipo == "TARJ":
                 tipo_t = clean_name(m.group(1))
                 dorsal = m.group(2)
                 nombre = clean_name(m.group(3)).replace("Min:", "").strip()
-                minuto_str = m.group(4)
+                minuto_txt = m.group(4)
+                minuto = parse_minuto(minuto_txt)
                 tarjetas.append({
-                    "tipo": tipo_t,
-                    "dorsal": dorsal,
-                    "jugadora": nombre,
-                    "minuto_txt": minuto_str,
-                    "minuto": parse_minuto(minuto_str),
+                    "tipo": tipo_t, "dorsal": dorsal, "jugadora": nombre,
+                    "minuto_txt": minuto_txt, "minuto": minuto
                 })
+                timeline.append({
+                    "order": order_counter, "minuto": minuto, "minuto_txt": minuto_txt,
+                    "evento": f"Tarjeta {tipo_t}", "detalle": f"({dorsal}) {nombre}"
+                })
+
             else:  # SUB (SALE por ENTRA)
                 sale_dorsal = m.group(1)
                 sale_nombre = clean_name(m.group(2)).replace("Min:", "").strip()
                 entra_dorsal = m.group(3)
                 entra_nombre = clean_name(m.group(4)).replace("Min:", "").strip()
-                minuto_str = m.group(5)
+                minuto_txt = m.group(5)
+                minuto = parse_minuto(minuto_txt)
 
-                # Como SUB_ORDER_IN_FIRST=False, guardamos como entra/sale correcto
                 subs.append({
-                    "entra_dorsal": entra_dorsal,
-                    "entra": entra_nombre,
-                    "sale_dorsal": sale_dorsal,
-                    "sale": sale_nombre,
-                    "minuto_txt": minuto_str,
-                    "minuto": parse_minuto(minuto_str),
+                    "entra_dorsal": entra_dorsal, "entra": entra_nombre,
+                    "sale_dorsal": sale_dorsal, "sale": sale_nombre,
+                    "minuto_txt": minuto_txt, "minuto": minuto
+                })
+                timeline.append({
+                    "order": order_counter, "minuto": minuto, "minuto_txt": minuto_txt,
+                    "evento": "Sustitución",
+                    "detalle": f"Entra ({entra_dorsal}) {entra_nombre} por ({sale_dorsal}) {sale_nombre}"
                 })
 
+            order_counter += 1
             i = m.end()
 
         # =========================
@@ -178,6 +190,11 @@ if uploaded_file is not None:
             pd.DataFrame(subs)[["entra_dorsal", "entra", "sale_dorsal", "sale", "minuto_txt", "minuto"]]
             .sort_values("minuto")
             if subs else pd.DataFrame(columns=["entra_dorsal", "entra", "sale_dorsal", "sale", "minuto_txt", "minuto"])
+        )
+        df_timeline = (
+            pd.DataFrame(timeline)[["minuto", "minuto_txt", "evento", "detalle", "order"]]
+            .sort_values(["minuto", "order"])
+            if timeline else pd.DataFrame(columns=["minuto", "minuto_txt", "evento", "detalle"])
         )
 
         # =========================
@@ -200,6 +217,16 @@ if uploaded_file is not None:
         st.caption(
             f"Resumen — Sustituciones: {len(df_subs)} | Goles: {len(df_goles)} | Tarjetas: {len(df_tarjetas)}"
         )
+
+        # ---- NUEVO: Línea de tiempo ----
+        st.subheader("Línea de tiempo (cronología del partido)")
+        if not df_timeline.empty:
+            st.dataframe(
+                df_timeline.drop(columns=["order"]),
+                use_container_width=True, hide_index=True
+            )
+        else:
+            st.info("No se detectaron eventos para la línea de tiempo.")
 
     except Exception as e:
         st.error(f"No se pudo leer o procesar el PDF. Detalle técnico: {e}")
