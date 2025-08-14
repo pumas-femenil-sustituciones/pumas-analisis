@@ -372,7 +372,7 @@ if uploaded_file is not None:
             st.info("No se detectaron eventos para la línea de tiempo.")
 
         # =========================
-        # 6) Marcador al momento del cambio e Impacto (USANDO my_team/opp_team)
+        # 6) Marcador al momento del cambio e Impacto
         # =========================
         st.divider()
         st.subheader("Marcador al momento del cambio e impacto")
@@ -405,21 +405,35 @@ if uploaded_file is not None:
                     break
             return my, opp
 
-        # Construye la serie de marcador acumulado
-        score_series = build_score_series(df_goles_edit, my_team, opp_team)
+        def puntos_por_estado(my_g: int, opp_g: int) -> int:
+            """0 si perdiendo, 1 si empatando, 3 si ganando."""
+            if my_g > opp_g:
+                return 3
+            if my_g == opp_g:
+                return 1
+            return 0
 
+        # Serie acumulada y marcador final
+        score_series = build_score_series(df_goles_edit, my_team, opp_team)
+        my_final = opp_final = 0
+        if score_series:
+            my_final, opp_final = score_series[-1][1], score_series[-1][2]
+        puntos_finales = puntos_por_estado(my_final, opp_final)
+
+        # Calcular para cada sustitución de mi equipo
         impacto_rows = []
         if not df_subs_edit.empty:
-            # Solo calculamos impacto para cambios de my_team
             subs_my = df_subs_edit[df_subs_edit["equipo"] == my_team].copy().reset_index(drop=True)
 
             for _, row in subs_my.iterrows():
                 t = int(row["minuto"])
                 w_end = t + int(ventana_min)
 
-                # Marcador al momento del cambio
+                # Game state al momento del cambio
                 my_t, opp_t = score_at(score_series, t)
-                marcador_momento = f"{my_t}-{opp_t}"
+                puntos_momento = puntos_por_estado(my_t, opp_t)
+
+                # Etiqueta de game state textual
                 if my_t > opp_t:
                     game_state = "Ganando"
                 elif my_t < opp_t:
@@ -427,7 +441,31 @@ if uploaded_file is not None:
                 else:
                     game_state = "Empatando"
 
-                # Goles en (t, t+ventana]
+                # Impacto por puntos (tu lógica)
+                delta_puntos = puntos_finales - puntos_momento
+
+                if puntos_momento == 0 and puntos_finales == 3:
+                    etiqueta = "IMPACTO MUY POSITIVO"
+                elif puntos_momento == 0 and puntos_finales == 1:
+                    etiqueta = "IMPACTO MEDIO"
+                elif puntos_momento == 0 and puntos_finales == 0:
+                    etiqueta = "IMPACTO NEUTRO"
+                elif puntos_momento == 1 and puntos_finales == 3:
+                    etiqueta = "IMPACTO POSITIVO"
+                elif puntos_momento == 1 and puntos_finales == 1:
+                    etiqueta = "IMPACTO NEUTRO"
+                elif puntos_momento == 1 and puntos_finales == 0:
+                    etiqueta = "IMPACTO NEGATIVO"
+                elif puntos_momento == 3 and puntos_finales == 3:
+                    etiqueta = "IMPACTO NEUTRO"
+                elif puntos_momento == 3 and puntos_finales == 1:
+                    etiqueta = "IMPACTO NEGATIVO"
+                elif puntos_momento == 3 and puntos_finales == 0:
+                    etiqueta = "IMPACTO MUY NEGATIVO"
+                else:
+                    etiqueta = "IMPACTO (revisar)"
+
+                # (Opcional) Impacto inmediato en ventana (se mantiene como referencia)
                 my_post = 0
                 opp_post = 0
                 if not df_goles_edit.empty:
@@ -438,27 +476,32 @@ if uploaded_file is not None:
                                 my_post += 1
                             elif g["equipo"] == opp_team:
                                 opp_post += 1
-
-                impacto = my_post - opp_post
+                impacto_ventana = my_post - opp_post
 
                 impacto_rows.append({
                     "minuto_cambio": t,
                     "entra": row["entra"],
                     "sale": row["sale"],
                     "equipo_cambio": my_team,
-                    "marcador_momento": marcador_momento,
+                    "marcador_momento": f"{my_t}-{opp_t}",
                     "game_state": game_state,
-                    "ventana": f"{t+1}-{w_end}",
+                    "puntos_momento": puntos_momento,
+                    "puntos_finales": puntos_finales,
+                    "delta_puntos": delta_puntos,
+                    "etiqueta_impacto_puntos": etiqueta,
+                    "ventana_min": ventana_min,
                     "goles_mi_equipo_post": my_post,
                     "goles_rival_post": opp_post,
-                    "impacto": impacto
+                    "impacto_ventana": impacto_ventana
                 })
 
-        df_impacto = (pd.DataFrame(impacto_rows)
-                      if impacto_rows else pd.DataFrame(columns=[
-                          "minuto_cambio","entra","sale","equipo_cambio","marcador_momento",
-                          "game_state","ventana","goles_mi_equipo_post","goles_rival_post","impacto"
-                      ]))
+        cols = [
+            "minuto_cambio","entra","sale","equipo_cambio",
+            "marcador_momento","game_state","puntos_momento","puntos_finales",
+            "delta_puntos","etiqueta_impacto_puntos",
+            "ventana_min","goles_mi_equipo_post","goles_rival_post","impacto_ventana"
+        ]
+        df_impacto = pd.DataFrame(impacto_rows)[cols] if impacto_rows else pd.DataFrame(columns=cols)
 
         if not df_impacto.empty:
             st.dataframe(df_impacto.sort_values("minuto_cambio"), use_container_width=True, hide_index=True)
