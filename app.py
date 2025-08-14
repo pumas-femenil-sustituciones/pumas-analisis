@@ -55,25 +55,27 @@ TEAMS_FEMENIL = [
     "santos", "mazatlan", "juarez", "atletico san luis", "puebla"
 ]
 
-def detect_rival_name(raw_text: str, pumas_name: str = "Pumas") -> str:
-    if not raw_text:
+def detect_rival_name(full_text: str, pumas_name: str = "Pumas") -> str:
+    """Detecta el rival a partir del texto de TODO el PDF."""
+    if not full_text:
         return "Rival"
 
-    txt = unidecode(raw_text)
+    txt = unidecode(full_text)
     txt_norm = re.sub(r"\s+", " ", txt).strip()
     low = txt_norm.lower()
 
-    m = re.search(r"\b([A-Za-zÁÉÍÓÚÜÑñ\s\.]+?)\s*(?:vs\.?|contra|\-)\s*([A-Za-zÁÉÍÓÚÜÑñ\s\.]+?)\b", txt, flags=re.IGNORECASE)
+    # Patrones tipo "X vs Y", "X contra Y", "X - Y"
+    m = re.search(
+        r"\b([A-Za-zÁÉÍÓÚÜÑñ\s\.]+?)\s*(?:vs\.?|contra|\-)\s*([A-Za-zÁÉÍÓÚÜÑñ\s\.]+?)\b",
+        txt, flags=re.IGNORECASE
+    )
     candidates = []
     if m:
         a = clean_name(m.group(1))
         b = clean_name(m.group(2))
         candidates.extend([a, b])
 
-    present = []
-    for t in TEAMS_FEMENIL:
-        if t in low:
-            present.append(t)
+    present = [t for t in TEAMS_FEMENIL if t in low]
 
     pretty_map = {
         "america": "América",
@@ -96,12 +98,13 @@ def detect_rival_name(raw_text: str, pumas_name: str = "Pumas") -> str:
         "pumas": "Pumas",
     }
 
-    norm_pumas = unidecode(pumas_name).lower()
+    # Si hay candidatos tipo "vs", devuelve el que no sea Pumas
     if candidates:
         for c in candidates:
             if "pumas" not in unidecode(c).lower():
                 return c.strip().title()
 
+    # Si no, usa el equipo más frecuente distinto de Pumas
     counts = Counter(present)
     if counts:
         for team, _ in counts.most_common():
@@ -119,20 +122,25 @@ if uploaded_file is not None:
     st.success(f"Archivo subido: {uploaded_file.name}")
 
     try:
+        # Abrimos el PDF y leemos TODAS las páginas para detectar rival
         with pdfplumber.open(uploaded_file) as pdf:
             num_pages = len(pdf.pages)
             st.caption(f"El PDF tiene {num_pages} página(s).")
-            default_page = 2 if num_pages >= 2 else 1
 
+            # Texto de TODAS las páginas (para detectar equipos)
+            all_text = "\n".join([p.extract_text() or "" for p in pdf.pages])
+
+            # Para extraer eventos, permitimos elegir página (por defecto 2 si existe)
+            default_page = 2 if num_pages >= 2 else 1
             page_to_read = st.number_input(
-                "¿Qué página quieres leer?",
+                "¿Qué página quieres leer para extraer eventos?",
                 min_value=1, max_value=num_pages, value=default_page, step=1
             )
-
             raw_text = pdf.pages[page_to_read - 1].extract_text() or ""
 
+        # Vista previa del texto de la página elegida
         if raw_text.strip():
-            st.subheader("Texto extraído")
+            st.subheader("Texto extraído (página seleccionada)")
             st.text_area("Contenido", unidecode(raw_text), height=300)
             st.download_button(
                 label="Descargar texto extraído (.txt)",
@@ -143,10 +151,14 @@ if uploaded_file is not None:
         else:
             st.warning("No se detectó texto en esa página.")
 
-        rival_detected = detect_rival_name(raw_text, pumas_name="Pumas")
+        # === Detectar rival usando TODO el PDF (all_text) ===
+        rival_detected = detect_rival_name(all_text, pumas_name="Pumas")
         rival_name = st.text_input("Equipo rival detectado (puedes corregirlo):", value=rival_detected)
         st.caption(f"Etiquetas usarán: Pumas / {rival_name}")
 
+        # =========================
+        # 2) Regex y extracción de eventos en la página seleccionada
+        # =========================
         norm_text = re.sub(r"\s+", " ", raw_text or "").strip()
 
         GOL = re.compile(
@@ -217,35 +229,60 @@ if uploaded_file is not None:
         df_tarjetas = pd.DataFrame(tarjetas).sort_values(["minuto", "tipo"]) if tarjetas else pd.DataFrame(columns=["tipo", "dorsal", "jugadora", "minuto_txt", "minuto"])
         df_timeline = pd.DataFrame(timeline)[["minuto", "minuto_txt", "evento", "detalle", "order"]].sort_values(["minuto", "order"]) if timeline else pd.DataFrame(columns=["minuto", "minuto_txt", "evento", "detalle"])
 
+        # =========================
+        # Multiselects para marcar equipo (usando rival_name real) y autogoles
+        # =========================
         st.divider()
         st.subheader("Asignar equipos a los eventos")
 
+        # Goles
         if not df_goles.empty:
-            goal_labels = [f"{i+1}. {row['minuto_txt']} — {row['jugadora']} ({row['dorsal']})" for i, row in df_goles.reset_index(drop=True).iterrows()]
+            goal_labels = [f"{i+1}. {row['minuto_txt']} — {row['jugadora']} ({row['dorsal']})"
+                           for i, row in df_goles.reset_index(drop=True).iterrows()]
             idx_range_goals = list(range(len(goal_labels)))
-            goles_rival_idx = st.multiselect(f"Selecciona **goles de {rival_name}**", options=idx_range_goals, default=[], format_func=lambda i: goal_labels[i])
-            autogoles_idx = st.multiselect("¿Alguno fue **autogol**?", options=idx_range_goals, default=[], format_func=lambda i: goal_labels[i])
+
+            goles_rival_idx = st.multiselect(
+                f"Selecciona **goles de {rival_name}** (los no seleccionados se marcan como Pumas)",
+                options=idx_range_goals, default=[], format_func=lambda i: goal_labels[i]
+            )
+            autogoles_idx = st.multiselect(
+                "¿Alguno fue **autogol**? (marca los que lo fueron)",
+                options=idx_range_goals, default=[], format_func=lambda i: goal_labels[i]
+            )
+
             df_goles_edit = df_goles.copy().reset_index(drop=True)
             df_goles_edit["equipo"] = [rival_name if i in goles_rival_idx else "Pumas" for i in idx_range_goals]
             df_goles_edit["autogol"] = [i in autogoles_idx for i in idx_range_goals]
+
             st.write("**Goles (con equipo y autogol)**")
             st.dataframe(df_goles_edit, use_container_width=True, hide_index=True)
         else:
             df_goles_edit = df_goles
             st.info("No se detectaron goles.")
 
+        # Sustituciones
         if not df_subs.empty:
-            sub_labels = [f"{i+1}. Min {row['minuto']} — Entra {row['entra']} por {row['sale']}" for i, row in df_subs.reset_index(drop=True).iterrows()]
+            sub_labels = [f"{i+1}. Min {row['minuto']} — Entra {row['entra']} por {row['sale']}"
+                          for i, row in df_subs.reset_index(drop=True).iterrows()]
             idx_range_subs = list(range(len(sub_labels)))
-            subs_rival_idx = st.multiselect(f"Selecciona **sustituciones de {rival_name}**", options=idx_range_subs, default=[], format_func=lambda i: sub_labels[i])
+
+            subs_rival_idx = st.multiselect(
+                f"Selecciona **sustituciones de {rival_name}** (las no seleccionadas se marcan como Pumas)",
+                options=idx_range_subs, default=[], format_func=lambda i: sub_labels[i]
+            )
+
             df_subs_edit = df_subs.copy().reset_index(drop=True)
             df_subs_edit["equipo"] = [rival_name if i in subs_rival_idx else "Pumas" for i in idx_range_subs]
+
             st.write("**Sustituciones (con equipo)**")
             st.dataframe(df_subs_edit, use_container_width=True, hide_index=True)
         else:
             df_subs_edit = df_subs
             st.info("No se detectaron sustituciones.")
 
+        # =========================
+        # Tablas base + Línea de tiempo
+        # =========================
         st.divider()
         st.subheader("Eventos detectados (base)")
         col1, col2, col3 = st.columns(3)
