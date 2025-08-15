@@ -259,7 +259,7 @@ if uploaded_file is not None:
             df_subs_edit = df_subs
             st.info("No se detectaron sustituciones.")
 
-        # =========================
+# =========================
 # Anotaciones tácticas (Editor con 2 menús dependientes)
 # =========================
 st.divider()
@@ -272,7 +272,7 @@ else:
     # --- Opciones ---
     FORMACIONES = [
         "1-4-4-2 (doble contención)","1-4-4-2 (diamante)","1-4-3-3","1-4-2-3-1",
-        "1-3-5-2","1-5-3-2","1-5-4-1","Otro"
+        "1-3-5-2","1-5-3-2","1-5-4-1","1,3,4,3", "1-3-3-4", "1-4-2-2-2", "Otro"
     ]
     INT_CATS = {
         "Estratégicas / de planteamiento":[
