@@ -260,120 +260,120 @@ if uploaded_file is not None:
             st.info("No se detectaron sustituciones.")
 
         # =========================
-        # Anotaciones tácticas (Editor con 2 menús dependientes)
-        # =========================
-        st.divider()
-        st.subheader("Sustituciones + Anotaciones tácticas")
+# Anotaciones tácticas (Editor con 2 menús dependientes)
+# =========================
+st.divider()
+st.subheader("Sustituciones + Anotaciones tácticas")
 
-        if df_subs_edit.empty:
-            st.info("No hay sustituciones para anotar.")
-            df_subs_with_notes = df_subs_edit.copy()
+if df_subs_edit.empty:
+    st.info("No hay sustituciones para anotar.")
+    df_subs_with_notes = df_subs_edit.copy()
+else:
+    # --- Opciones ---
+    FORMACIONES = [
+        "1-4-4-2 (doble contención)","1-4-4-2 (diamante)","1-4-3-3","1-4-2-3-1",
+        "1-3-5-2","1-5-3-2","1-5-4-1","Otro"
+    ]
+    INT_CATS = {
+        "Estratégicas / de planteamiento":[
+            "Presionar","Todo al ataque","Contener","Cerrar marcador",
+            "Cambio de sistema","Ajuste posicional",
+            "Más control de balón","Repliegue defensivo","Para buscar transiciones"
+        ],
+        "Contexto del marcador y tiempo":[
+            "Remontar","Mantener empate","Ganar tiempo","Último esfuerzo"
+        ],
+        "Condicionantes físicas":[
+            "Fatiga","Lesión","Recuperación programada"
+        ],
+        "Desarrollo individual":[
+            "Dar minutos","Probar variante","Dar confianza"
+        ],
+        "Situaciones específicas":[
+            "Especialista ABP","Cambio defensivo puntual","Cambio ofensivo puntual",
+            "Ajuste por expulsión","Precaución por amonestación"
+        ],
+        "Otro":["Otro"]
+    }
+    # mapa inverso: intención -> categoría
+    INTENT_TO_CAT = {opt: cat for cat, opts in INT_CATS.items() for opt in opts}
+    ALL_INTENT_OPTIONS = sorted(INTENT_TO_CAT.keys())
+
+    # firma para mantener estado estable
+    base_now = df_subs_edit[["minuto","entra","sale","equipo"]].copy().sort_values(["minuto","entra","sale","equipo"])
+    sig_now = "|".join(base_now.astype(str).agg("||".join, axis=1))
+
+    key_table = "tabla_anotaciones_v4"
+    key_sig   = "anot_sig"
+
+    if key_table not in st.session_state or st.session_state.get(key_sig, "") != sig_now:
+        base = df_subs_edit[["minuto","entra","sale","equipo"]].copy()
+        base["formacion_antes"]   = ""
+        base["formacion_despues"] = ""
+        # OJO: primero intención (usuario elige) y categoría (auto)
+        base["intencion_tactica"]   = ""
+        base["intencion_categoria"] = ""
+        base["intencion_otro"]      = ""
+        st.session_state[key_table] = base
+        st.session_state[key_sig]   = sig_now
+    else:
+        current = st.session_state[key_table]
+        merged = df_subs_edit[["minuto","entra","sale","equipo"]].merge(
+            current.drop_duplicates(subset=["minuto","entra","sale","equipo"]),
+            on=["minuto","entra","sale","equipo"], how="left"
+        )
+        for col in ["formacion_antes","formacion_despues","intencion_tactica","intencion_categoria","intencion_otro"]:
+            if col not in merged.columns:
+                merged[col] = ""
+            merged[col] = merged[col].fillna("")
+        st.session_state[key_table] = merged
+
+    # Editor: primero INTENCIÓN (elige), luego CATEGORÍA (auto y bloqueada)
+    edited = st.data_editor(
+        st.session_state[key_table],
+        key="anot_editor",
+        use_container_width=True,
+        hide_index=True,
+        num_rows="fixed",
+        column_config={
+            "formacion_antes": st.column_config.SelectboxColumn(
+                "formacion_antes", options=[""] + FORMACIONES, help="Siempre con portera: 1-…"
+            ),
+            "formacion_despues": st.column_config.SelectboxColumn(
+                "formacion_despues", options=[""] + FORMACIONES
+            ),
+            "intencion_tactica": st.column_config.SelectboxColumn(
+                "intencion_tactica",
+                options=[""] + ALL_INTENT_OPTIONS,
+                help="Elige la intención; la categoría se asigna en automático."
+            ),
+            "intencion_categoria": st.column_config.TextColumn(
+                "intencion_categoria",
+                help="Asignada automáticamente según la intención.",
+                disabled=True
+            ),
+            "intencion_otro": st.column_config.TextColumn(
+                "Otro (especifica)", help="Se usa si elegiste 'Otro'."
+            ),
+        }
+    )
+
+    # Autorrelleno de categoría según la intención
+    for idx, row in edited.iterrows():
+        intent = str(row.get("intencion_tactica","")).strip()
+        if intent in INTENT_TO_CAT:
+            edited.at[idx, "intencion_categoria"] = INTENT_TO_CAT[intent]
         else:
-            # Opciones
-            FORMACIONES = [
-                "1-4-4-2 (doble contención)","1-4-4-2 (diamante)","1-4-3-3","1-4-2-3-1",
-                "1-3-5-2","1-5-3-2","1-5-4-1","Otro"
-            ]
-            INT_CATS = {
-                "Estratégicas / de planteamiento":[
-                    "Presionar","Todo al ataque","Contener","Cerrar marcador","Cambio de sistema","Ajuste posicional",
-                    "Más control de balón","Repliegue defensivo","Para buscar transiciones"
-                ],
-                "Contexto del marcador y tiempo":[
-                    "Remontar","Mantener empate","Ganar tiempo","Último esfuerzo"
-                ],
-                "Condicionantes físicas":[
-                    "Fatiga","Lesión","Recuperación programada"
-                ],
-                "Desarrollo individual":[
-                    "Dar minutos","Probar variante","Dar confianza"
-                ],
-                "Situaciones específicas":[
-                    "Especialista ABP","Cambio defensivo puntual","Cambio ofensivo puntual","Ajuste por expulsión","Precaución por amonestación"
-                ],
-                "Otro":["Otro"]
-            }
-            ALL_INTENT_OPTIONS = sorted({opt for arr in INT_CATS.values() for opt in arr})
+            # si limpiar intención, limpiamos categoría
+            if not intent:
+                edited.at[idx, "intencion_categoria"] = ""
 
-            # Firma para no reconstruir tabla en cada rerun
-            base_now = df_subs_edit[["minuto","entra","sale","equipo"]].copy().sort_values(["minuto","entra","sale","equipo"])
-            sig_now = "|".join(base_now.astype(str).agg("||".join, axis=1))
+    # Guardar edición limpia en sesión
+    st.session_state[key_table] = edited.copy()
+    st.dataframe(edited.sort_values("minuto"), use_container_width=True, hide_index=True)
 
-            key_table = "tabla_anotaciones_v4"
-            key_sig   = "anot_sig"
-
-            if key_table not in st.session_state or st.session_state.get(key_sig, "") != sig_now:
-                base = df_subs_edit[["minuto","entra","sale","equipo"]].copy()
-                base["formacion_antes"]   = ""
-                base["formacion_despues"] = ""
-                base["intencion_categoria"] = ""
-                base["intencion_tactica"]   = ""
-                base["intencion_otro"]      = ""
-                st.session_state[key_table] = base
-                st.session_state[key_sig]   = sig_now
-            else:
-                current = st.session_state[key_table]
-                merged = df_subs_edit[["minuto","entra","sale","equipo"]].merge(
-                    current.drop_duplicates(subset=["minuto","entra","sale","equipo"]),
-                    on=["minuto","entra","sale","equipo"], how="left"
-                )
-                for col in ["formacion_antes","formacion_despues","intencion_categoria","intencion_tactica","intencion_otro"]:
-                    if col not in merged.columns:
-                        merged[col] = ""
-                    merged[col] = merged[col].fillna("")
-                st.session_state[key_table] = merged
-
-            edited = st.data_editor(
-                st.session_state[key_table],
-                key="anot_editor",
-                use_container_width=True,
-                hide_index=True,
-                num_rows="fixed",
-                column_config={
-                    "formacion_antes": st.column_config.SelectboxColumn(
-                        "formacion_antes", options=[""] + FORMACIONES, help="Siempre con portera: 1-…"
-                    ),
-                    "formacion_despues": st.column_config.SelectboxColumn(
-                        "formacion_despues", options=[""] + FORMACIONES
-                    ),
-                    "intencion_categoria": st.column_config.SelectboxColumn(
-                        "intencion_categoria", options=[""] + list(INT_CATS.keys()),
-                        help="Primero elige la categoría…"
-                    ),
-                    "intencion_tactica": st.column_config.SelectboxColumn(
-                        "intencion_tactica", options=[""] + ALL_INTENT_OPTIONS,
-                        help="…luego la intención específica."
-                    ),
-                    "intencion_otro": st.column_config.TextColumn(
-                        "Otro (especifica)", help="Se usa si elegiste 'Otro'."
-                    ),
-                }
-            )
-
-            def _belongs(cat, opt):
-                if not cat or not opt:
-                    return True
-                valid = set(INT_CATS.get(cat, []))
-                return (opt in valid) or (opt == "Otro")
-
-            warnings = []
-            for idx, row in edited.iterrows():
-                cat = row.get("intencion_categoria","")
-                opt = row.get("intencion_tactica","")
-                if cat and opt and not _belongs(cat, opt):
-                    edited.at[idx, "intencion_tactica"] = ""
-                    warnings.append(f"Min {int(row['minuto'])}: la intención '{opt}' no pertenece a la categoría '{cat}'. Selección reasignada.")
-                if row.get("intencion_tactica","") == "Otro" and not str(row.get("intencion_otro","")).strip():
-                    warnings.append(f"Min {int(row['minuto'])}: elegiste 'Otro'. Escribe el detalle en la columna de texto.")
-
-            if warnings:
-                st.info("⚠️ Revisiones en tus selecciones:\n- " + "\n- ".join(warnings))
-
-            st.session_state[key_table] = edited.copy()
-            st.dataframe(edited.sort_values("minuto"), use_container_width=True, hide_index=True)
-
-            # Alias para impacto
-            df_subs_with_notes = edited.copy()
+    # Alias para “Impacto”
+    df_subs_with_notes = edited.copy()
 
         # =========================
         # Eventos base
