@@ -374,7 +374,6 @@ else:
 
     # Mantener un alias que usemos después en impacto
     df_subs_with_notes = edited.copy()
-            )
 
         # =========================
         # Eventos base
