@@ -348,6 +348,143 @@ if uploaded_file is not None:
             st.info("No se detectaron sustituciones.")
 
         # =========================
+        # 4.1) ANOTACIONES tácticas por sustitución (TAREA 1)
+        # =========================
+        st.divider()
+        st.subheader("Anotaciones tácticas por sustitución")
+
+        # Catálogo de formaciones comunes
+        FORMACIONES = [
+            "1-4-4-2", "1-4-2-3-1", "1-4-3-3", "1-3-5-2", "1-3-4-3",
+            "1-5-3-2", "1-5-4-1", "1-4-1-4-1", "1-4-5-1", "1-4-1-2-1-2",
+            "Otro"
+        ]
+
+        # Catálogo categorizado de intención táctica
+        INTENCION_CATEGORIAS = {
+            "Estratégicas / Planteamiento": [
+                "Presionar", "Todo al ataque", "Contener", "Cerrar marcador",
+                "Cambio de sistema", "Ajuste posicional"
+            ],
+            "Contexto marcador/tiempo": [
+                "Remontar", "Mantener empate", "Ganar tiempo", "Último esfuerzo"
+            ],
+            "Condicionantes físicas": [
+                "Fatiga", "Lesión", "Recuperación programada"
+            ],
+            "Desarrollo individual": [
+                "Dar minutos", "Probar variante", "Dar confianza"
+            ],
+            "Situaciones específicas": [
+                "Especialista ABP", "Cambio defensivo puntual",
+                "Cambio ofensivo puntual", "Ajuste por expulsión"
+            ],
+            "Otro": ["Otro"]
+        }
+
+        # Lista plana con etiquetas con prefijo de categoría para UX,
+        # pero almacenamos el "valor limpio" (sin prefijo).
+        INTENCION_OPCIONES_LABEL = []
+        INTENCION_OPCIONES_VAL = []
+        for cat, opts in INTENCION_CATEGORIAS.items():
+            for o in opts:
+                INTENCION_OPCIONES_LABEL.append(f"{cat} · {o}")
+                INTENCION_OPCIONES_VAL.append(o)
+
+        def get_intencion_index_by_value(value: str) -> int:
+            try:
+                return INTENCION_OPCIONES_VAL.index(value)
+            except ValueError:
+                # Si no está, devolvemos índice de "Ajuste posicional" por defecto
+                return INTENCION_OPCIONES_VAL.index("Ajuste posicional") if "Ajuste posicional" in INTENCION_OPCIONES_VAL else 0
+
+        if df_subs_edit.empty:
+            st.info("No hay sustituciones para anotar.")
+        else:
+            # Inicializa estado si no existe
+            if "anotaciones_subs" not in st.session_state:
+                st.session_state["anotaciones_subs"] = {}
+
+            for idx, row in df_subs_edit.reset_index(drop=True).iterrows():
+                key_base = f"sub_{idx}_{int(row['minuto'])}_{row['entra']}_{row['sale']}"
+
+                saved = st.session_state["anotaciones_subs"].get(key_base, {})
+                form_before_def = saved.get("formacion_antes", "1-4-4-2")
+                form_after_def  = saved.get("formacion_despues", "1-4-4-2")
+                intent_def      = saved.get("intencion_tactica", "Ajuste posicional")
+                intent_otro_def = saved.get("intencion_otro", "")
+
+                with st.expander(
+                    f"Sustitución {idx+1}: Min {int(row['minuto'])} — Entra {row['entra']} por {row['sale']} ({row['equipo']})",
+                    expanded=False
+                ):
+                    c1, c2, c3 = st.columns(3)
+
+                    with c1:
+                        fa = st.selectbox(
+                            "Formación **antes**",
+                            options=FORMACIONES,
+                            index=FORMACIONES.index(form_before_def) if form_before_def in FORMACIONES else 0,
+                            key=f"{key_base}_fa"
+                        )
+                        if fa == "Otro":
+                            fa = st.text_input("Especifica formación antes", value=form_before_def if form_before_def not in FORMACIONES else "", key=f"{key_base}_fa_otro") or "Otro"
+
+                    with c2:
+                        fd = st.selectbox(
+                            "Formación **después**",
+                            options=FORMACIONES,
+                            index=FORMACIONES.index(form_after_def) if form_after_def in FORMACIONES else 0,
+                            key=f"{key_base}_fd"
+                        )
+                        if fd == "Otro":
+                            fd = st.text_input("Especifica formación después", value=form_after_def if form_after_def not in FORMACIONES else "", key=f"{key_base}_fd_otro") or "Otro"
+
+                    with c3:
+                        # Selectbox con etiquetas categorizadas
+                        idx_int = get_intencion_index_by_value(intent_def)
+                        intent_label = st.selectbox(
+                            "Intención táctica",
+                            options=INTENCION_OPCIONES_LABEL,
+                            index=idx_int,
+                            key=f"{key_base}_it_label"
+                        )
+                        it_val = INTENCION_OPCIONES_VAL[INTENCION_OPCIONES_LABEL.index(intent_label)]
+
+                        it_otro = ""
+                        if it_val == "Otro":
+                            it_otro = st.text_input("Especifica intención táctica (Otro)", value=intent_otro_def, key=f"{key_base}_it_otro")
+
+                    # Guardar en session_state
+                    st.session_state["anotaciones_subs"][key_base] = {
+                        "formacion_antes": fa,
+                        "formacion_despues": fd,
+                        "intencion_tactica": it_val if it_val != "Otro" else (it_otro or "Otro"),
+                        "intencion_otro": it_otro
+                    }
+
+            # Construir columnas nuevas en df_subs_edit
+            form_antes, form_despues, inten = [], [], []
+            for idx, row in df_subs_edit.reset_index(drop=True).iterrows():
+                key_base = f"sub_{idx}_{int(row['minuto'])}_{row['entra']}_{row['sale']}"
+                saved = st.session_state["anotaciones_subs"].get(key_base, {})
+                form_antes.append(saved.get("formacion_antes", ""))
+                form_despues.append(saved.get("formacion_despues", ""))
+                inten.append(saved.get("intencion_tactica", ""))
+
+            df_subs_edit["formacion_antes"]   = form_antes
+            df_subs_edit["formacion_despues"] = form_despues
+            df_subs_edit["intencion_tactica"] = inten
+
+            st.write("**Sustituciones + Anotaciones tácticas**")
+            st.dataframe(
+                df_subs_edit[
+                    ["minuto","entra","sale","equipo","formacion_antes","formacion_despues","intencion_tactica"]
+                ].sort_values("minuto"),
+                use_container_width=True, hide_index=True
+            )
+
+        # =========================
         # 5) Tablas base + Línea de tiempo
         # =========================
         st.divider()
@@ -372,16 +509,13 @@ if uploaded_file is not None:
             st.info("No se detectaron eventos para la línea de tiempo.")
 
         # =========================
-        # 6) Marcador al momento del cambio e Impacto
+        # 6) Marcador al momento del cambio e Impacto (incluye las nuevas columnas)
         # =========================
         st.divider()
         st.subheader("Marcador al momento del cambio e impacto")
 
         def build_score_series(goals_df: pd.DataFrame, my_team: str, opp_team: str):
-            """
-            Devuelve lista de tuplas (minuto, goles_my, goles_opp) ordenadas por minuto.
-            Requiere columnas: 'minuto' (int) y 'equipo' (my_team/opp_team).
-            """
+            """Devuelve (minuto, goles_my, goles_opp) acumulado por minuto."""
             if goals_df.empty or "equipo" not in goals_df.columns:
                 return []
             g = goals_df.sort_values("minuto").reset_index(drop=True)
@@ -420,12 +554,12 @@ if uploaded_file is not None:
             my_final, opp_final = score_series[-1][1], score_series[-1][2]
         puntos_finales = puntos_por_estado(my_final, opp_final)
 
-        # Calcular para cada sustitución de mi equipo
+        # Calcular impacto para cambios de mi equipo
         impacto_rows = []
         if not df_subs_edit.empty:
             subs_my = df_subs_edit[df_subs_edit["equipo"] == my_team].copy().reset_index(drop=True)
 
-            for _, row in subs_my.iterrows():
+            for idx, row in subs_my.iterrows():
                 t = int(row["minuto"])
                 w_end = t + int(ventana_min)
 
@@ -433,7 +567,6 @@ if uploaded_file is not None:
                 my_t, opp_t = score_at(score_series, t)
                 puntos_momento = puntos_por_estado(my_t, opp_t)
 
-                # Etiqueta de game state textual
                 if my_t > opp_t:
                     game_state = "Ganando"
                 elif my_t < opp_t:
@@ -441,9 +574,8 @@ if uploaded_file is not None:
                 else:
                     game_state = "Empatando"
 
-                # Impacto por puntos (tu lógica)
+                # Impacto por puntos (tu lógica de 9 escenarios)
                 delta_puntos = puntos_finales - puntos_momento
-
                 if puntos_momento == 0 and puntos_finales == 3:
                     etiqueta = "IMPACTO MUY POSITIVO"
                 elif puntos_momento == 0 and puntos_finales == 1:
@@ -465,7 +597,7 @@ if uploaded_file is not None:
                 else:
                     etiqueta = "IMPACTO (revisar)"
 
-                # (Opcional) Impacto inmediato en ventana (se mantiene como referencia)
+                # Impacto inmediato en ventana (referencia)
                 my_post = 0
                 opp_post = 0
                 if not df_goles_edit.empty:
@@ -483,6 +615,9 @@ if uploaded_file is not None:
                     "entra": row["entra"],
                     "sale": row["sale"],
                     "equipo_cambio": my_team,
+                    "formacion_antes": row.get("formacion_antes", ""),
+                    "formacion_despues": row.get("formacion_despues", ""),
+                    "intencion_tactica": row.get("intencion_tactica", ""),
                     "marcador_momento": f"{my_t}-{opp_t}",
                     "game_state": game_state,
                     "puntos_momento": puntos_momento,
@@ -497,6 +632,7 @@ if uploaded_file is not None:
 
         cols = [
             "minuto_cambio","entra","sale","equipo_cambio",
+            "formacion_antes","formacion_despues","intencion_tactica",
             "marcador_momento","game_state","puntos_momento","puntos_finales",
             "delta_puntos","etiqueta_impacto_puntos",
             "ventana_min","goles_mi_equipo_post","goles_rival_post","impacto_ventana"
@@ -506,7 +642,7 @@ if uploaded_file is not None:
         if not df_impacto.empty:
             st.dataframe(df_impacto.sort_values("minuto_cambio"), use_container_width=True, hide_index=True)
         else:
-            st.info("Marca arriba los **goles de cada equipo** y las **sustituciones de tu equipo** para calcular el impacto.")
+            st.info("Marca arriba los **goles por equipo**, las **sustituciones de tu equipo** y completa las **anotaciones tácticas** para ver el impacto.")
 
     except Exception as e:
         st.error(f"No se pudo leer o procesar el PDF. Detalle técnico: {e}")
