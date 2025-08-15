@@ -4,6 +4,7 @@ from unidecode import unidecode
 import re
 import pandas as pd
 from collections import Counter
+import matplotlib.pyplot as plt
 
 # =========================
 # Configuración
@@ -71,17 +72,21 @@ TEAM_ALIASES = {
     "tijuana": ["tijuana","xolas"],
     "toluca": ["toluca"]
 }
-PRETTY = {t: t.title().replace("San Luis","San Luis").replace("Cruz Azul","Cruz Azul") for t in TEAM_CANONICAL}
-PRETTY["america"]="América"; PRETTY["atletico san luis"]="Atlético San Luis"; PRETTY["cruz azul"]="Cruz Azul"
-PRETTY["juarez"]="Juárez"; PRETTY["leon"]="León"; PRETTY["mazatlan"]="Mazatlán"; PRETTY["pachuca"]="Pachuca"
-PRETTY["puebla"]="Puebla"; PRETTY["pumas"]="Pumas"; PRETTY["queretaro"]="Querétaro"; PRETTY["rayadas"]="Rayadas"
+PRETTY = {t: t.title() for t in TEAM_CANONICAL}
+PRETTY.update({
+    "america":"América","atletico san luis":"Atlético San Luis","cruz azul":"Cruz Azul",
+    "juarez":"Juárez","leon":"León","mazatlan":"Mazatlán","puebla":"Puebla",
+    "pumas":"Pumas","queretaro":"Querétaro","rayadas":"Rayadas"
+})
 
 def canon_to_pretty(c): return PRETTY.get(c, c.title())
+
 def alias_to_canon(token: str) -> str | None:
     t = norm(token)
     for canon, aliases in TEAM_ALIASES.items():
         for al in aliases:
-            if norm(al) in t or t in norm(al):
+            na = norm(al)
+            if na in t or t in na:
                 return canon
     return None
 
@@ -147,7 +152,7 @@ if uploaded_file is not None:
 
         if raw_text.strip():
             st.subheader("Texto extraído (página seleccionada)")
-            st.text_area("Contenido", unidecode(raw_text), height=240)
+            st.text_area("Contenido", unidecode(raw_text), height=220)
         else:
             st.warning("No se detectó texto en esa página (puede ser escaneado).")
 
@@ -247,7 +252,6 @@ if uploaded_file is not None:
         if df_subs_edit.empty:
             st.info("No hay sustituciones para anotar.")
         else:
-            PLACEH = "— Selecciona —"
             FORMACIONES = [
                 "1-4-4-2 (doble contención)","1-4-4-2 (diamante)","1-4-3-3","1-4-2-3-1",
                 "1-3-5-2","1-5-3-2","1-5-4-1","Otro"
@@ -272,7 +276,6 @@ if uploaded_file is not None:
             }
             INT_LABELS = [f"{cat} · {opt}" for cat, arr in INT_CATS.items() for opt in arr]
 
-            # Estado previo/persistencia
             key_state = "tabla_anotaciones_v3"
             if key_state not in st.session_state:
                 base = df_subs_edit[["minuto","entra","sale","equipo"]].copy()
@@ -282,7 +285,6 @@ if uploaded_file is not None:
                 base["intencion_otro"] = ""
                 st.session_state[key_state] = base
             else:
-                # si cambian las sustituciones, reindexamos por minuto/entra/sale/equipo
                 base_new = df_subs_edit[["minuto","entra","sale","equipo"]].copy()
                 saved = st.session_state[key_state]
                 merged = base_new.merge(
@@ -313,21 +315,18 @@ if uploaded_file is not None:
                 }
             )
             st.session_state[key_state] = edited
+            df_subs_with_notes = edited.copy()
 
-            # Normalización & validaciones
-            edited = edited.copy()
-            # Si eligieron "Otro" en formación, respetamos texto libre en 'intencion_otro'? (no, formación no usa libre aquí)
-            edited["formacion_antes"]   = edited["formacion_antes"].apply(lambda x: x if x!="Otro" else "Otro")
-            edited["formacion_despues"] = edited["formacion_despues"].apply(lambda x: x if x!="Otro" else "Otro")
-
-            # Warning por "Cambio de sistema" con formaciones iguales
-            for _, r in edited.iterrows():
+            # Validación suave
+            for _, r in df_subs_with_notes.iterrows():
                 if r["intencion_label"].endswith("· Cambio de sistema") if r["intencion_label"] else False:
                     if r["formacion_antes"] and r["formacion_despues"] and r["formacion_antes"]==r["formacion_despues"]:
                         st.warning(f"Min {int(r['minuto'])}: marcaste **Cambio de sistema** pero la formación no cambió.")
 
-            # Mostrar tabla ya limpia (y guardar para uso posterior)
-            df_subs_with_notes = edited.copy()
+            st.dataframe(
+                df_subs_with_notes.sort_values("minuto"),
+                use_container_width=True, hide_index=True
+            )
 
         # =========================
         # Eventos base
@@ -354,7 +353,7 @@ if uploaded_file is not None:
             st.info("No se detectaron eventos para la línea de tiempo.")
 
         # =========================
-        # Impacto (de mi equipo) usando las notas
+        # Impacto (de mi equipo)
         # =========================
         st.divider()
         st.subheader("Marcador al momento del cambio e impacto")
@@ -389,18 +388,11 @@ if uploaded_file is not None:
 
         impacto_rows=[]
         if not df_subs_edit.empty:
-            # Merge con notas
-            if df_subs_edit is not None and 'df_subs_with_notes' in locals():
-                merged = df_subs_edit.merge(
-                    df_subs_with_notes,
-                    on=["minuto","entra","sale","equipo"],
-                    how="left"
-                )
-            else:
-                merged = df_subs_edit.copy()
-                merged["formacion_antes"]=""; merged["formacion_despues"]=""
-                merged["intencion_label"]=""; merged["intencion_otro"]=""
-
+            merged = df_subs_edit.merge(
+                df_subs_with_notes if 'df_subs_with_notes' in locals() else df_subs_edit.assign(
+                    formacion_antes="",formacion_despues="",intencion_label="",intencion_otro=""),
+                on=["minuto","entra","sale","equipo"], how="left"
+            )
             subs_my = merged[merged["equipo"]==my_team].copy().reset_index(drop=True)
 
             for _, row in subs_my.iterrows():
@@ -409,7 +401,6 @@ if uploaded_file is not None:
                 pm = puntos(my_t, opp_t)
                 game_state = "Ganando" if my_t>opp_t else ("Perdiendo" if my_t<opp_t else "Empatando")
 
-                # etiqueta impacto puntos (9 escenarios)
                 pf = puntos_finales
                 if pm==0 and pf==3: etiqueta="IMPACTO MUY POSITIVO"
                 elif pm==0 and pf==1: etiqueta="IMPACTO MEDIO"
@@ -422,7 +413,6 @@ if uploaded_file is not None:
                 elif pm==3 and pf==0: etiqueta="IMPACTO MUY NEGATIVO"
                 else: etiqueta="IMPACTO (revisar)"
 
-                # Ventana post-cambio
                 my_post=opp_post=0
                 for _,g in df_goles_edit.iterrows():
                     gm=int(g["minuto"])
@@ -430,14 +420,12 @@ if uploaded_file is not None:
                         if g["equipo"]==my_team: my_post+=1
                         elif g["equipo"]==opp_team: opp_post+=1
 
-                # Mapear intención categorizada
                 it_label = row.get("intencion_label","")
                 it_cat, it_val = ("","")
-                if it_label:
-                    if " · " in it_label:
-                        it_cat, it_val = it_label.split(" · ",1)
-                    else:
-                        it_val = it_label
+                if it_label and " · " in it_label:
+                    it_cat, it_val = it_label.split(" · ",1)
+                else:
+                    it_val = it_label or ""
                 if it_val=="Otro": it_val = row.get("intencion_otro","Otro")
 
                 impacto_rows.append({
@@ -472,6 +460,90 @@ if uploaded_file is not None:
             st.dataframe(df_impacto.sort_values("minuto_cambio"), use_container_width=True, hide_index=True)
         else:
             st.info("Completa las **anotaciones** y la asignación de equipos para ver el impacto.")
+
+        # =========================
+        # Gráfico: distribución de intenciones tácticas (Donut + Barra)
+        # =========================
+        st.divider()
+        st.subheader("Gráfico de intenciones tácticas")
+
+        tabla_key = "tabla_anotaciones_v3"
+        if tabla_key not in st.session_state or st.session_state[tabla_key].empty:
+            st.info("Primero captura intenciones tácticas en la tabla de 'Sustituciones + Anotaciones tácticas'.")
+        else:
+            df_notes = st.session_state[tabla_key].copy()
+
+            # Colores Pumas
+            OBSIDIAN   = "#0F1A2B"
+            CLUB_GOLD  = "#E8BE83"
+            PALETTE = [OBSIDIAN, CLUB_GOLD, "#1C2A40", "#F1D3A6", "#0B1322", "#D6A86A", "#24344F", "#C99758"]
+
+            def split_label(lbl: str):
+                if not isinstance(lbl, str) or not lbl.strip():
+                    return ("", "")
+                if " · " in lbl:
+                    cat, val = lbl.split(" · ", 1)
+                    return (cat.strip(), val.strip())
+                return ("", lbl.strip())
+
+            tmp = df_notes.copy()
+            tmp["cat"], tmp["intencion"] = zip(*tmp["intencion_label"].apply(split_label))
+            tmp["intencion"] = tmp.apply(
+                lambda r: (r["intencion_otro"].strip() if isinstance(r["intencion_otro"], str) and r["intencion"].lower()=="otro" else r["intencion"]),
+                axis=1
+            )
+
+            colf1, colf2, colf3 = st.columns(3)
+            with colf1:
+                filtro_equipo = st.selectbox("Equipo", options=["Todos", my_team, opp_team], index=0)
+            with colf2:
+                nivel = st.radio("Agrupar por", options=["Categoría", "Intención"], horizontal=True, index=1)
+            with colf3:
+                min_count = st.number_input("Mín. ocurrencias para mostrar", min_value=1, max_value=10, value=1, step=1)
+
+            if filtro_equipo != "Todos":
+                tmp = tmp[tmp["equipo"] == filtro_equipo]
+
+            if nivel == "Categoría":
+                serie = tmp["cat"].value_counts()
+                titulo = f"Intenciones tácticas por categoría — {filtro_equipo}"
+            else:
+                serie = tmp["intencion"].value_counts()
+                titulo = f"Intenciones tácticas — {filtro_equipo}"
+
+            serie = serie[serie >= min_count]
+
+            if serie.empty:
+                st.info("Sin datos suficientes para graficar con los filtros actuales.")
+            else:
+                labels = list(serie.index)
+                counts = list(serie.values)
+                colors = (PALETTE * ((len(labels)//len(PALETTE))+1))[:len(labels)]
+
+                c1, c2 = st.columns(2)
+
+                # Donut
+                with c1:
+                    fig, ax = plt.subplots(figsize=(5.5, 5.5))
+                    wedges, texts = ax.pie(counts, labels=None, startangle=90, colors=colors, wedgeprops={"linewidth": 1, "edgecolor": "white"})
+                    centre_circle = plt.Circle((0, 0), 0.60, fc="white")
+                    fig.gca().add_artist(centre_circle)
+                    ax.set_title(titulo, fontsize=12)
+                    ax.legend(wedges, [f"{l} ({c})" for l, c in zip(labels, counts)], loc="center left", bbox_to_anchor=(1, 0.5))
+                    st.pyplot(fig, clear_figure=True)
+
+                # Barra horizontal
+                with c2:
+                    fig2, ax2 = plt.subplots(figsize=(6.5, 5.5))
+                    y_pos = list(range(len(labels)))[::-1]
+                    ax2.barh(y_pos, counts[::-1], color=colors[::-1])
+                    ax2.set_yticks(y_pos)
+                    ax2.set_yticklabels(labels[::-1])
+                    ax2.set_xlabel("Ocurrencias")
+                    ax2.set_title("Distribución (barra)")
+                    for i, v in enumerate(counts[::-1]):
+                        ax2.text(v + 0.05, i, str(v), va="center")
+                    st.pyplot(fig2, clear_figure=True)
 
     except Exception as e:
         st.error(f"No se pudo leer o procesar el PDF. Detalle técnico: {e}")
