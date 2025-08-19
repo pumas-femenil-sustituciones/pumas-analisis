@@ -58,28 +58,28 @@ TEAM_CANONICAL = [
 TEAM_ALIASES = {
     "america": ["america", "club america"],
     "atlas": ["atlas"],
-    "atletico san luis": ["atletico san luis", "atlético san luis", "san luis"],
-    "chivas": ["chivas", "guadalajara"],
-    "cruz azul": ["cruz azul", "cd cruz azul", "club cruz azul"],
-    "juarez": ["juarez", "fc juarez", "bravas"],
-    "leon": ["leon", "club leon"],
-    "mazatlan": ["mazatlan", "mazatlan fc"],
+    "atletico san luis": ["atletico san luis","atlético san luis","san luis"],
+    "chivas": ["chivas","guadalajara"],
+    "cruz azul": ["cruz azul","cd cruz azul","club cruz azul"],
+    "juarez": ["juarez","fc juarez","bravas"],
+    "leon": ["leon","club leon"],
+    "mazatlan": ["mazatlan","mazatlan fc"],
     "necaxa": ["necaxa"],
-    "pachuca": ["pachuca", "tuzas", "cf pachuca"],
-    "puebla": ["puebla", "club puebla"],
-    "pumas": ["pumas", "universidad", "unam", "universidad nacional"],
-    "queretaro": ["queretaro", "querétaro", "gallos"],
-    "rayadas": ["rayadas", "monterrey femenil", "cf monterrey femenil", "monterrey"],
-    "santos": ["santos", "santos laguna"],
-    "tigres": ["tigres", "tigres uanl", "uanl"],
-    "tijuana": ["tijuana", "xolas"],
+    "pachuca": ["pachuca","tuzas","cf pachuca"],
+    "puebla": ["puebla","club puebla"],
+    "pumas": ["pumas","universidad","unam","universidad nacional"],
+    "queretaro": ["queretaro","querétaro","gallos"],
+    "rayadas": ["rayadas","monterrey femenil","cf monterrey femenil","monterrey"],
+    "santos": ["santos","santos laguna"],
+    "tigres": ["tigres","tigres uanl","uanl"],
+    "tijuana": ["tijuana","xolas"],
     "toluca": ["toluca"]
 }
 PRETTY = {t: t.title() for t in TEAM_CANONICAL}
 PRETTY.update({
-    "america": "América", "atletico san luis": "Atlético San Luis", "cruz azul": "Cruz Azul",
-    "juarez": "Juárez", "leon": "León", "mazatlan": "Mazatlán", "puebla": "Puebla",
-    "pumas": "Pumas", "queretaro": "Querétaro", "rayadas": "Rayadas"
+    "america":"América","atletico san luis":"Atlético San Luis","cruz azul":"Cruz Azul",
+    "juarez":"Juárez","leon":"León","mazatlan":"Mazatlán","puebla":"Puebla",
+    "pumas":"Pumas","queretaro":"Querétaro","rayadas":"Rayadas"
 })
 
 def canon_to_pretty(c): 
@@ -127,14 +127,12 @@ def detect_match_teams(full_text: str) -> list[str]:
     for canon, aliases in TEAM_ALIASES.items():
         for al in aliases:
             if norm(al) in flat:
-                hits.append(canon)
-                break
+                hits.append(canon); break
     if hits:
-        order = [t for t, _ in Counter(hits).most_common()]
-        out = []
+        order = [t for t,_ in Counter(hits).most_common()]
+        out=[]
         for t in order:
-            if t not in out:
-                out.append(t)
+            if t not in out: out.append(t)
         return out[:2]
     return []
 
@@ -152,12 +150,16 @@ uploaded_file = st.file_uploader("Subir PDF", type=["pdf"])
 if uploaded_file is not None:
     st.success(f"Archivo subido: {uploaded_file.name}")
     try:
+        # ---------- lectura PDF ----------
         with pdfplumber.open(uploaded_file) as pdf:
             pages = len(pdf.pages)
             all_text = "\n".join([p.extract_text() or "" for p in pdf.pages])
             default_page = 2 if pages >= 2 else 1
-            page_to_read = st.number_input("¿Qué página quieres leer para extraer eventos?", 1, pages, default_page, 1)
-            raw_text = pdf.pages[page_to_read - 1].extract_text() or ""
+            page_to_read = st.number_input(
+                "¿Qué página quieres leer para extraer eventos?",
+                1, pages, default_page, 1
+            )
+            raw_text = pdf.pages[page_to_read-1].extract_text() or ""
 
         if raw_text.strip():
             st.subheader("Texto extraído (página seleccionada)")
@@ -165,6 +167,7 @@ if uploaded_file is not None:
         else:
             st.warning("No se detectó texto en esa página (puede ser escaneado).")
 
+        # ---------- equipos detectados ----------
         teams_detected = detect_match_teams(all_text)
         st.caption("Equipos detectados: " + ", ".join([canon_to_pretty(t) for t in teams_detected]) if teams_detected else "(no detectados)")
         suggest_my = "pumas" if "pumas" in teams_detected else (teams_detected[0] if teams_detected else "pumas")
@@ -180,14 +183,15 @@ if uploaded_file is not None:
             if t != my_team_canon:
                 opp = t
                 break
-        opp_team = st.text_input("Equipo rival (auto si fue detectado; editable)", value=canon_to_pretty(opp) if opp else "") or "Rival"
+        opp_team = st.text_input(
+            "Equipo rival (auto si fue detectado; editable)",
+            value=canon_to_pretty(opp) if opp else ""
+        ) or "Rival"
 
         my_team = canon_to_pretty(my_team_canon)
         st.caption(f"Usaremos etiquetas: **{my_team}** / **{opp_team}**")
 
-        # =========================
-        # Regex & extracción (página seleccionada)
-        # =========================
+        # ---------- regex & extracción ----------
         norm_text = re.sub(r"\s+", " ", raw_text or "").strip()
 
         GOL = re.compile(r"Gol de\s*\((\d+)\)\s+((?:(?!\bMin:).)+?)\s+Min:\s*(\d+(?:\+\d+)?)", re.IGNORECASE)
@@ -207,39 +211,49 @@ if uploaded_file is not None:
                 break
             kind, _, m = sorted(cand, key=lambda x: x[1])[0]
             if kind == "G":
-                dorsal, nombre, minuto_txt = m.group(1), clean_name(m.group(2)).replace("Min:", "").strip(), m.group(3)
+                dorsal, nombre, minuto_txt = m.group(1), clean_name(m.group(2)).replace("Min:","").strip(), m.group(3)
                 minuto = parse_minuto(minuto_txt)
-                goles.append({"dorsal": dorsal, "jugadora": nombre, "minuto_txt": minuto_txt, "minuto": minuto})
-                timeline.append({"order": order, "minuto": minuto, "minuto_txt": minuto_txt, "evento": "Gol", "detalle": f"({dorsal}) {nombre}"})
+                goles.append({"dorsal":dorsal,"jugadora":nombre,"minuto_txt":minuto_txt,"minuto":minuto})
+                timeline.append({"order":order,"minuto":minuto,"minuto_txt":minuto_txt,"evento":"Gol","detalle":f"({dorsal}) {nombre}"})
             elif kind == "T":
-                tipo, dorsal, nombre, minuto_txt = clean_name(m.group(1)), m.group(2), clean_name(m.group(3)).replace("Min:", "").strip(), m.group(4)
+                tipo, dorsal, nombre, minuto_txt = clean_name(m.group(1)), m.group(2), clean_name(m.group(3)).replace("Min:","").strip(), m.group(4)
                 minuto = parse_minuto(minuto_txt)
-                tarjetas.append({"tipo": tipo, "dorsal": dorsal, "jugadora": nombre, "minuto_txt": minuto_txt, "minuto": minuto})
-                timeline.append({"order": order, "minuto": minuto, "minuto_txt": minuto_txt, "evento": f"Tarjeta {tipo}", "detalle": f"({dorsal}) {nombre}"})
+                tarjetas.append({"tipo":tipo,"dorsal":dorsal,"jugadora":nombre,"minuto_txt":minuto_txt,"minuto":minuto})
+                timeline.append({"order":order,"minuto":minuto,"minuto_txt":minuto_txt,"evento":f"Tarjeta {tipo}","detalle":f"({dorsal}) {nombre}"})
             else:
-                sale_d, sale_n, entra_d, entra_n, minuto_txt = m.group(1), clean_name(m.group(2)).replace("Min:", "").strip(), m.group(3), clean_name(m.group(4)).replace("Min:", "").strip(), m.group(5)
+                sale_d, sale_n, entra_d, entra_n, minuto_txt = (
+                    m.group(1), clean_name(m.group(2)).replace("Min:","").strip(),
+                    m.group(3), clean_name(m.group(4)).replace("Min:","").strip(),
+                    m.group(5)
+                )
                 minuto = parse_minuto(minuto_txt)
-                subs.append({"entra_dorsal": entra_d, "entra": entra_n, "sale_dorsal": sale_d, "sale": sale_n, "minuto_txt": minuto_txt, "minuto": minuto})
-                timeline.append({"order": order, "minuto": minuto, "minuto_txt": minuto_txt, "evento": "Sustitución", "detalle": f"Entra ({entra_d}) {entra_n} por ({sale_d}) {sale_n}"})
+                subs.append({"entra_dorsal":entra_d,"entra":entra_n,"sale_dorsal":sale_d,"sale":sale_n,"minuto_txt":minuto_txt,"minuto":minuto})
+                timeline.append({"order":order,"minuto":minuto,"minuto_txt":minuto_txt,"evento":"Sustitución","detalle":f"Entra ({entra_d}) {entra_n} por ({sale_d}) {sale_n}"})
             order += 1
             i = m.end()
 
-        df_goles = pd.DataFrame(goles).sort_values("minuto") if goles else pd.DataFrame(columns=["dorsal", "jugadora", "minuto_txt", "minuto"])
-        df_subs  = pd.DataFrame(subs)[["entra_dorsal", "entra", "sale_dorsal", "sale", "minuto_txt", "minuto"]].sort_values("minuto") if subs else pd.DataFrame(columns=["entra_dorsal", "entra", "sale_dorsal", "sale", "minuto_txt", "minuto"])
-        df_tj    = pd.DataFrame(tarjetas).sort_values(["minuto", "tipo"]) if tarjetas else pd.DataFrame(columns=["tipo", "dorsal", "jugadora", "minuto_txt", "minuto"])
-        df_tl    = pd.DataFrame(timeline)[["minuto", "minuto_txt", "evento", "detalle", "order"]].sort_values(["minuto", "order"]) if timeline else pd.DataFrame(columns=["minuto", "minuto_txt", "evento", "detalle", "order"])
+        df_goles = pd.DataFrame(goles).sort_values("minuto") if goles else pd.DataFrame(columns=["dorsal","jugadora","minuto_txt","minuto"])
+        df_subs  = pd.DataFrame(subs )[["entra_dorsal","entra","sale_dorsal","sale","minuto_txt","minuto"]].sort_values("minuto") if subs else pd.DataFrame(columns=["entra_dorsal","entra","sale_dorsal","sale","minuto_txt","minuto"])
+        df_tj    = pd.DataFrame(tarjetas).sort_values(["minuto","tipo"]) if tarjetas else pd.DataFrame(columns=["tipo","dorsal","jugadora","minuto_txt","minuto"])
+        df_tl    = pd.DataFrame(timeline)[["minuto","minuto_txt","evento","detalle","order"]].sort_values(["minuto","order"]) if timeline else pd.DataFrame(columns=["minuto","minuto_txt","evento","detalle","order"])
 
         # =========================
-        # Equipo en goles y cambios
+        # Asignar equipos a eventos
         # =========================
         st.divider()
         st.subheader("Asignar equipos a los eventos")
 
         if not df_goles.empty:
-            goal_labels = [f"{i+1}. {r['minuto_txt']} — {r['jugadora']} ({r['dorsal']})" for i, r in df_goles.reset_index(drop=True).iterrows()]
+            goal_labels = [f"{i+1}. {r['minuto_txt']} — {r['jugadora']} ({r['dorsal']})" for i,r in df_goles.reset_index(drop=True).iterrows()]
             idx_g = list(range(len(goal_labels)))
-            goles_opp_idx = st.multiselect(f"Goles de **{opp_team}** (los no seleccionados serán de {my_team})", idx_g, default=[], format_func=lambda i: goal_labels[i])
-            autogoles_idx = st.multiselect("¿Autogoles? marca los que lo sean", idx_g, default=[], format_func=lambda i: goal_labels[i])
+            goles_opp_idx = st.multiselect(
+                f"Goles de **{opp_team}** (los no seleccionados serán de {my_team})",
+                idx_g, default=[], format_func=lambda i: goal_labels[i]
+            )
+            autogoles_idx = st.multiselect(
+                "¿Autogoles? marca los que lo sean",
+                idx_g, default=[], format_func=lambda i: goal_labels[i]
+            )
             df_goles_edit = df_goles.copy().reset_index(drop=True)
             df_goles_edit["equipo"]  = [opp_team if i in goles_opp_idx else my_team for i in idx_g]
             df_goles_edit["autogol"] = [i in autogoles_idx for i in idx_g]
@@ -249,9 +263,12 @@ if uploaded_file is not None:
             st.info("No se detectaron goles.")
 
         if not df_subs.empty:
-            sub_labels = [f"{i+1}. Min {r['minuto']} — Entra {r['entra']} por {r['sale']}" for i, r in df_subs.reset_index(drop=True).iterrows()]
+            sub_labels = [f"{i+1}. Min {r['minuto']} — Entra {r['entra']} por {r['sale']}" for i,r in df_subs.reset_index(drop=True).iterrows()]
             idx_s = list(range(len(sub_labels)))
-            subs_opp_idx = st.multiselect(f"Sustituciones de **{opp_team}** (las no seleccionadas serán de {my_team})", idx_s, default=[], format_func=lambda i: sub_labels[i])
+            subs_opp_idx = st.multiselect(
+                f"Sustituciones de **{opp_team}** (las no seleccionadas serán de {my_team})",
+                idx_s, default=[], format_func=lambda i: sub_labels[i]
+            )
             df_subs_edit = df_subs.copy().reset_index(drop=True)
             df_subs_edit["equipo"] = [opp_team if i in subs_opp_idx else my_team for i in idx_s]
             st.dataframe(df_subs_edit, use_container_width=True, hide_index=True)
@@ -259,148 +276,137 @@ if uploaded_file is not None:
             df_subs_edit = df_subs
             st.info("No se detectaron sustituciones.")
 
-# =========================
-# Anotaciones tácticas (Editor con 2 menús dependientes)
-# =========================
-st.divider()
-st.subheader("Sustituciones + Anotaciones tácticas")
-
-if df_subs_edit.empty:
-    st.info("No hay sustituciones para anotar.")
-    df_subs_with_notes = df_subs_edit.copy()
-else:
-    # --- Opciones ---
-    FORMACIONES = [
-        "1-4-4-2 (doble contención)","1-4-4-2 (diamante)","1-4-3-3","1-4-2-3-1",
-        "1-3-5-2","1-5-3-2","1-5-4-1","1,3,4,3", "1-3-3-4", "1-4-2-2-2", "Otro"
-    ]
-    INT_CATS = {
-        "Estratégicas / de planteamiento":[
-            "Presionar","Todo al ataque","Contener","Cerrar marcador",
-            "Cambio de sistema","Ajuste posicional",
-            "Más control de balón","Repliegue defensivo","Para buscar transiciones"
-        ],
-        "Contexto del marcador y tiempo":[
-            "Remontar","Mantener empate","Ganar tiempo","Último esfuerzo"
-        ],
-        "Condicionantes físicas":[
-            "Fatiga","Lesión","Recuperación programada"
-        ],
-        "Desarrollo individual":[
-            "Dar minutos","Probar variante","Dar confianza"
-        ],
-        "Situaciones específicas":[
-            "Especialista ABP","Cambio defensivo puntual","Cambio ofensivo puntual",
-            "Ajuste por expulsión","Precaución por amonestación"
-        ],
-        "Otro":["Otro"]
-    }
-    # mapa inverso: intención -> categoría
-    INTENT_TO_CAT = {opt: cat for cat, opts in INT_CATS.items() for opt in opts}
-    ALL_INTENT_OPTIONS = sorted(INTENT_TO_CAT.keys())
-
-    # firma para mantener estado estable
-    base_now = df_subs_edit[["minuto","entra","sale","equipo"]].copy().sort_values(["minuto","entra","sale","equipo"])
-    sig_now = "|".join(base_now.astype(str).agg("||".join, axis=1))
-
-    key_table = "tabla_anotaciones_v4"
-    key_sig   = "anot_sig"
-
-    if key_table not in st.session_state or st.session_state.get(key_sig, "") != sig_now:
-        base = df_subs_edit[["minuto","entra","sale","equipo"]].copy()
-        base["formacion_antes"]   = ""
-        base["formacion_despues"] = ""
-        # OJO: primero intención (usuario elige) y categoría (auto)
-        base["intencion_tactica"]   = ""
-        base["intencion_categoria"] = ""
-        base["intencion_otro"]      = ""
-        st.session_state[key_table] = base
-        st.session_state[key_sig]   = sig_now
-    else:
-        current = st.session_state[key_table]
-        merged = df_subs_edit[["minuto","entra","sale","equipo"]].merge(
-            current.drop_duplicates(subset=["minuto","entra","sale","equipo"]),
-            on=["minuto","entra","sale","equipo"], how="left"
-        )
-        for col in ["formacion_antes","formacion_despues","intencion_tactica","intencion_categoria","intencion_otro"]:
-            if col not in merged.columns:
-                merged[col] = ""
-            merged[col] = merged[col].fillna("")
-        st.session_state[key_table] = merged
-
-    # Editor: primero INTENCIÓN (elige), luego CATEGORÍA (auto y bloqueada)
-    edited = st.data_editor(
-        st.session_state[key_table],
-        key="anot_editor",
-        use_container_width=True,
-        hide_index=True,
-        num_rows="fixed",
-        column_config={
-            "formacion_antes": st.column_config.SelectboxColumn(
-                "formacion_antes", options=[""] + FORMACIONES, help="Siempre con portera: 1-…"
-            ),
-            "formacion_despues": st.column_config.SelectboxColumn(
-                "formacion_despues", options=[""] + FORMACIONES
-            ),
-            "intencion_tactica": st.column_config.SelectboxColumn(
-                "intencion_tactica",
-                options=[""] + ALL_INTENT_OPTIONS,
-                help="Elige la intención; la categoría se asigna en automático."
-            ),
-            "intencion_categoria": st.column_config.TextColumn(
-                "intencion_categoria",
-                help="Asignada automáticamente según la intención.",
-                disabled=True
-            ),
-            "intencion_otro": st.column_config.TextColumn(
-                "Otro (especifica)", help="Se usa si elegiste 'Otro'."
-            ),
-        }
-    )
-
-    # Autorrelleno de categoría según la intención
-    for idx, row in edited.iterrows():
-        intent = str(row.get("intencion_tactica","")).strip()
-        if intent in INTENT_TO_CAT:
-            edited.at[idx, "intencion_categoria"] = INTENT_TO_CAT[intent]
-        else:
-            # si limpiar intención, limpiamos categoría
-            if not intent:
-                edited.at[idx, "intencion_categoria"] = ""
-
-    # Guardar edición limpia en sesión
-    st.session_state[key_table] = edited.copy()
-    st.dataframe(edited.sort_values("minuto"), use_container_width=True, hide_index=True)
-
-    # Alias para “Impacto”
-    df_subs_with_notes = edited.copy()
-
         # =========================
-        # Eventos base
+        # Anotaciones tácticas (intención -> categoría automática)
         # =========================
         st.divider()
-        st.subheader("Eventos detectados (base)")
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            st.write("**Sustituciones (base)**")
-            st.dataframe(df_subs, use_container_width=True, hide_index=True)
-        with c2:
-            st.write("**Goles (base)**")
-            st.dataframe(df_goles, use_container_width=True, hide_index=True)
-        with c3:
-            st.write("**Tarjetas**")
-            st.dataframe(df_tj, use_container_width=True, hide_index=True)
+        st.subheader("Sustituciones + Anotaciones tácticas")
 
-        st.caption(f"Resumen — Sustituciones: {len(df_subs)} | Goles: {len(df_goles)} | Tarjetas: {len(df_tj)}")
-
-        st.subheader("Línea de tiempo")
-        if not df_tl.empty:
-            st.dataframe(df_tl.drop(columns=["order"]), use_container_width=True, hide_index=True)
+        if df_subs_edit.empty:
+            st.info("No hay sustituciones para anotar.")
+            df_subs_with_notes = df_subs_edit.copy()
         else:
-            st.info("No se detectaron eventos para la línea de tiempo.")
+            FORMACIONES = [
+                "1-4-4-2 (doble contención)","1-4-4-2 (diamante)","1-4-3-3","1-4-2-3-1",
+                "1-3-5-2","1-5-3-2","1-5-4-1","Otro"
+            ]
+            INT_CATS = {
+                "Estratégicas / de planteamiento":[
+                    "Presionar","Todo al ataque","Contener","Cerrar marcador",
+                    "Cambio de sistema","Ajuste posicional",
+                    "Más control de balón","Repliegue defensivo","Para buscar transiciones"
+                ],
+                "Contexto del marcador y tiempo":[
+                    "Remontar","Mantener empate","Ganar tiempo","Último esfuerzo"
+                ],
+                "Condicionantes físicas":[
+                    "Fatiga","Lesión","Recuperación programada"
+                ],
+                "Desarrollo individual":[
+                    "Dar minutos","Probar variante","Dar confianza"
+                ],
+                "Situaciones específicas":[
+                    "Especialista ABP","Cambio defensivo puntual","Cambio ofensivo puntual",
+                    "Ajuste por expulsión","Precaución por amonestación"
+                ],
+                "Otro":["Otro"]
+            }
+            INTENT_TO_CAT = {opt: cat for cat, opts in INT_CATS.items() for opt in opts}
+            ALL_INTENT_OPTIONS = sorted(INTENT_TO_CAT.keys())
+
+            base_now = df_subs_edit[["minuto","entra","sale","equipo"]].copy().sort_values(["minuto","entra","sale","equipo"])
+            sig_now = "|".join(base_now.astype(str).agg("||".join, axis=1))
+
+            key_table = "tabla_anotaciones_v4"
+            key_sig   = "anot_sig"
+
+            if key_table not in st.session_state or st.session_state.get(key_sig, "") != sig_now:
+                base = df_subs_edit[["minuto","entra","sale","equipo"]].copy()
+                base["formacion_antes"]   = ""
+                base["formacion_despues"] = ""
+                base["intencion_tactica"]   = ""
+                base["intencion_categoria"] = ""
+                base["intencion_otro"]      = ""
+                st.session_state[key_table] = base
+                st.session_state[key_sig]   = sig_now
+            else:
+                current = st.session_state[key_table]
+                merged = df_subs_edit[["minuto","entra","sale","equipo"]].merge(
+                    current.drop_duplicates(subset=["minuto","entra","sale","equipo"]),
+                    on=["minuto","entra","sale","equipo"], how="left"
+                )
+                for col in ["formacion_antes","formacion_despues","intencion_tactica","intencion_categoria","intencion_otro"]:
+                    if col not in merged.columns:
+                        merged[col] = ""
+                    merged[col] = merged[col].fillna("")
+                st.session_state[key_table] = merged
+
+            edited = st.data_editor(
+                st.session_state[key_table],
+                key="anot_editor",
+                use_container_width=True,
+                hide_index=True,
+                num_rows="fixed",
+                column_config={
+                    "formacion_antes": st.column_config.SelectboxColumn(
+                        "formacion_antes", options=[""] + FORMACIONES, help="Siempre con portera: 1-…"
+                    ),
+                    "formacion_despues": st.column_config.SelectboxColumn(
+                        "formacion_despues", options=[""] + FORMACIONES
+                    ),
+                    "intencion_tactica": st.column_config.SelectboxColumn(
+                        "intencion_tactica",
+                        options=[""] + ALL_INTENT_OPTIONS,
+                        help="Elige la intención; la categoría se asigna en automático."
+                    ),
+                    "intencion_categoria": st.column_config.TextColumn(
+                        "intencion_categoria",
+                        help="Asignada automáticamente según la intención.",
+                        disabled=True
+                    ),
+                    "intencion_otro": st.column_config.TextColumn(
+                        "Otro (especifica)", help="Se usa si elegiste 'Otro'."
+                    ),
+                }
+            )
+
+            # Autorrelleno de categoría según la intención
+            for idx, row in edited.iterrows():
+                intent = str(row.get("intencion_tactica","")).strip()
+                if intent in INTENT_TO_CAT:
+                    edited.at[idx, "intencion_categoria"] = INTENT_TO_CAT[intent]
+                else:
+                    if not intent:
+                        edited.at[idx, "intencion_categoria"] = ""
+
+            st.session_state[key_table] = edited.copy()
+            st.dataframe(edited.sort_values("minuto"), use_container_width=True, hide_index=True)
+            df_subs_with_notes = edited.copy()
 
         # =========================
-        # Impacto (de mi equipo)
+        # Eventos base (debug opcional)
+        # =========================
+        with st.expander("Eventos detectados (base) y línea de tiempo (debug)"):
+            c1,c2,c3 = st.columns(3)
+            with c1:
+                st.write("**Sustituciones (base)**")
+                st.dataframe(df_subs, use_container_width=True, hide_index=True)
+            with c2:
+                st.write("**Goles (base)**")
+                st.dataframe(df_goles, use_container_width=True, hide_index=True)
+            with c3:
+                st.write("**Tarjetas**")
+                st.dataframe(df_tj, use_container_width=True, hide_index=True)
+
+            st.caption(f"Resumen — Sustituciones: {len(df_subs)} | Goles: {len(df_goles)} | Tarjetas: {len(df_tj)}")
+
+            if not df_tl.empty:
+                st.dataframe(df_tl.drop(columns=["order"]), use_container_width=True, hide_index=True)
+            else:
+                st.info("No se detectaron eventos para la línea de tiempo.")
+
+        # =========================
+        # Impacto (mi equipo)
         # =========================
         st.divider()
         st.subheader("Marcador al momento del cambio e impacto")
@@ -409,19 +415,16 @@ else:
             if goals_df.empty or "equipo" not in goals_df.columns:
                 return []
             g = goals_df.sort_values("minuto").reset_index(drop=True)
-            series = []
-            a = b = 0
-            for _, row in g.iterrows():
-                if row["equipo"] == team_a:
-                    a += 1
-                elif row["equipo"] == team_b:
-                    b += 1
+            series=[]; a=b=0
+            for _,row in g.iterrows():
+                if row["equipo"] == team_a: a+=1
+                elif row["equipo"] == team_b: b+=1
                 series.append((int(row["minuto"]), a, b))
             return series
 
         def score_at(series, t: int):
-            a = b = 0
-            for m, sa, sb in series:
+            a=b=0
+            for m,sa,sb in series:
                 if m <= t:
                     a, b = sa, sb
                 else:
@@ -429,10 +432,8 @@ else:
             return a, b
 
         def puntos(my, opp):
-            if my > opp:
-                return 3
-            if my == opp:
-                return 1
+            if my > opp: return 3
+            if my == opp: return 1
             return 0
 
         score_series = build_score_series(df_goles_edit, my_team, opp_team)
@@ -445,59 +446,56 @@ else:
         if not df_subs_edit.empty:
             merged = df_subs_edit.merge(
                 df_subs_with_notes if 'df_subs_with_notes' in locals() else df_subs_edit.assign(
-                    formacion_antes="", formacion_despues="", intencion_categoria="", intencion_tactica="", intencion_otro=""
+                    formacion_antes="", formacion_despues="", intencion_tactica="", intencion_categoria="", intencion_otro=""
                 ),
-                on=["minuto", "entra", "sale", "equipo"], how="left"
+                on=["minuto","entra","sale","equipo"], how="left"
             )
             subs_my = merged[merged["equipo"] == my_team].copy().reset_index(drop=True)
 
             for _, row in subs_my.iterrows():
-                t = int(row["minuto"])
-                w_end = t + int(ventana_min)
+                t = int(row["minuto"]); w_end = t + int(ventana_min)
                 my_t, opp_t = score_at(score_series, t)
                 pm = puntos(my_t, opp_t)
                 game_state = "Ganando" if my_t > opp_t else ("Perdiendo" if my_t < opp_t else "Empatando")
 
                 pf = puntos_finales
-                if pm == 0 and pf == 3: etiqueta = "IMPACTO MUY POSITIVO"
-                elif pm == 0 and pf == 1: etiqueta = "IMPACTO MEDIO"
-                elif pm == 0 and pf == 0: etiqueta = "IMPACTO NEUTRO"
-                elif pm == 1 and pf == 3: etiqueta = "IMPACTO POSITIVO"
-                elif pm == 1 and pf == 1: etiqueta = "IMPACTO NEUTRO"
-                elif pm == 1 and pf == 0: etiqueta = "IMPACTO NEGATIVO"
-                elif pm == 3 and pf == 3: etiqueta = "IMPACTO NEUTRO"
-                elif pm == 3 and pf == 1: etiqueta = "IMPACTO NEGATIVO"
-                elif pm == 3 and pf == 0: etiqueta = "IMPACTO MUY NEGATIVO"
-                else: etiqueta = "IMPACTO (revisar)"
+                if   pm==0 and pf==3: etiqueta="IMPACTO MUY POSITIVO"
+                elif pm==0 and pf==1: etiqueta="IMPACTO MEDIO"
+                elif pm==0 and pf==0: etiqueta="IMPACTO NEUTRO"
+                elif pm==1 and pf==3: etiqueta="IMPACTO POSITIVO"
+                elif pm==1 and pf==1: etiqueta="IMPACTO NEUTRO"
+                elif pm==1 and pf==0: etiqueta="IMPACTO NEGATIVO"
+                elif pm==3 and pf==3: etiqueta="IMPACTO NEUTRO"
+                elif pm==3 and pf==1: etiqueta="IMPACTO NEGATIVO"
+                elif pm==3 and pf==0: etiqueta="IMPACTO MUY NEGATIVO"
+                else: etiqueta="IMPACTO (revisar)"
 
-                my_post = opp_post = 0
-                for _, g in df_goles_edit.iterrows():
-                    gm = int(g["minuto"])
+                my_post=opp_post=0
+                for _,g in df_goles_edit.iterrows():
+                    gm=int(g["minuto"])
                     if t < gm <= w_end:
-                        if g["equipo"] == my_team: 
-                            my_post += 1
-                        elif g["equipo"] == opp_team: 
-                            opp_post += 1
+                        if g["equipo"]==my_team: my_post+=1
+                        elif g["equipo"]==opp_team: opp_post+=1
 
                 impacto_rows.append({
                     "minuto_cambio": t,
                     "entra": row["entra"],
                     "sale": row["sale"],
                     "equipo_cambio": my_team,
-                    "formacion_antes": row.get("formacion_antes", ""),
-                    "formacion_despues": row.get("formacion_despues", ""),
-                    "intencion_categoria": row.get("intencion_categoria", ""),
-                    "intencion_tactica": row.get("intencion_tactica", "") if row.get("intencion_tactica","") != "Otro" else row.get("intencion_otro","Otro"),
+                    "formacion_antes": row.get("formacion_antes",""),
+                    "formacion_despues": row.get("formacion_despues",""),
+                    "intencion_categoria": row.get("intencion_categoria",""),
+                    "intencion_tactica": row.get("intencion_tactica","") if row.get("intencion_tactica","") != "Otro" else row.get("intencion_otro","Otro"),
                     "marcador_momento": f"{my_t}-{opp_t}",
                     "game_state": game_state,
                     "puntos_momento": pm,
                     "puntos_finales": pf,
-                    "delta_puntos": pf - pm,
+                    "delta_puntos": pf-pm,
                     "etiqueta_impacto_puntos": etiqueta,
                     "ventana_min": ventana_min,
                     "goles_mi_equipo_post": my_post,
                     "goles_rival_post": opp_post,
-                    "impacto_ventana": my_post - opp_post
+                    "impacto_ventana": my_post-opp_post
                 })
 
         cols = ["minuto_cambio","entra","sale","equipo_cambio",
@@ -513,24 +511,24 @@ else:
             st.info("Completa las **anotaciones** y la asignación de equipos para ver el impacto.")
 
         # =========================
-        # Gráfico: distribución de intenciones tácticas (Donut + Barra)
+        # Gráfico: distribución de intenciones tácticas
         # =========================
         st.divider()
         st.subheader("Gráfico de intenciones tácticas")
 
-        tabla_key = "tabla_anotaciones_v4"  # coherente con el editor
+        tabla_key = "tabla_anotaciones_v4"
         if tabla_key not in st.session_state or st.session_state[tabla_key].empty:
             st.info("Primero captura intenciones tácticas en la tabla de 'Sustituciones + Anotaciones tácticas'.")
         else:
             df_notes = st.session_state[tabla_key].copy()
 
-            # Colores Pumas (Obsidian y Club Gold + complementos)
-            OBSIDIAN   = "#0F1A2B"
-            CLUB_GOLD  = "#E8BE83"
+            # Colores Pumas
+            OBSIDIAN  = "#0F1A2B"
+            CLUB_GOLD = "#E8BE83"
             PALETTE = [OBSIDIAN, CLUB_GOLD, "#1C2A40", "#F1D3A6", "#0B1322", "#D6A86A", "#24344F", "#C99758"]
 
             tmp = df_notes.copy()
-            # Normaliza "Otro"
+            # normalizar "Otro"
             tmp["intencion_final"] = tmp.apply(
                 lambda r: (r["intencion_otro"].strip() if isinstance(r.get("intencion_otro",""), str) and str(r.get("intencion_tactica","")).lower()=="otro"
                            else r.get("intencion_tactica","")),
@@ -546,7 +544,7 @@ else:
                 min_count = st.number_input("Mín. ocurrencias para mostrar", min_value=1, max_value=10, value=1, step=1)
 
             if filtro_equipo != "Todos":
-                tmp = tmp[tmp["equipo"] == filtro_equipo] if "equipo" in tmp.columns else tmp
+                tmp = tmp[tmp["equipo"] == filtro_equipo]
 
             if nivel == "Categoría":
                 serie = tmp["intencion_categoria"].value_counts()
@@ -569,11 +567,15 @@ else:
                 # Donut
                 with c1:
                     fig, ax = plt.subplots(figsize=(5.5, 5.5))
-                    wedges, texts = ax.pie(counts, labels=None, startangle=90, colors=colors, wedgeprops={"linewidth": 1, "edgecolor": "white"})
+                    wedges, _ = ax.pie(
+                        counts, labels=None, startangle=90, colors=colors,
+                        wedgeprops={"linewidth": 1, "edgecolor": "white"}
+                    )
                     centre_circle = plt.Circle((0, 0), 0.60, fc="white")
                     fig.gca().add_artist(centre_circle)
                     ax.set_title(titulo, fontsize=12)
-                    ax.legend(wedges, [f"{l} ({c})" for l, c in zip(labels, counts)], loc="center left", bbox_to_anchor=(1, 0.5))
+                    ax.legend(wedges, [f"{l} ({c})" for l, c in zip(labels, counts)],
+                              loc="center left", bbox_to_anchor=(1, 0.5))
                     st.pyplot(fig, clear_figure=True)
 
                 # Barra horizontal
