@@ -1,3 +1,4 @@
+# app.py
 import streamlit as st
 import pdfplumber
 from unidecode import unidecode
@@ -40,8 +41,16 @@ def clean_name(s: str) -> str:
 def norm(s: str) -> str:
     return re.sub(r"\s+", " ", unidecode(s or "").strip().lower())
 
+def normalize_formation(s: str) -> str:
+    if not s:
+        return s
+    s = s.replace(" ", "")
+    if not s.startswith("1-"):
+        s = "1-" + s
+    return s
+
 # =========================
-# Equipos (detector)
+# Equipos
 # =========================
 TEAM_CANONICAL = [
     "america","atlas","atletico san luis","chivas","cruz azul","juarez","leon","mazatlan",
@@ -74,7 +83,7 @@ PRETTY.update({
     "pumas":"Pumas","queretaro":"Querétaro","rayadas":"Rayadas"
 })
 
-def canon_to_pretty(c): 
+def canon_to_pretty(c):
     return PRETTY.get(c, c.title())
 
 def alias_to_canon(token: str) -> str | None:
@@ -133,17 +142,6 @@ def detect_match_teams(full_text: str) -> list[str]:
 # =========================
 st.sidebar.header("Parámetros")
 ventana_min = st.sidebar.number_input("Ventana post-cambio (min)", 5, 30, 10, 1)
-
-# =========================
-# Posiciones
-# =========================
-POSITION_OPTIONS = [
-    "POR",
-    "LAD","LVD","DCD","DCI","LAI","LVI",
-    "MCC","MCD","MCO","MID","MII","MVD","MVI",
-    "EXI","EXD","MEP","SED","FNU","DEC"
-]
-POSITION_HELP = "Selecciona la posición táctica (siglas)."
 
 # =========================
 # Cargador PDF
@@ -235,18 +233,10 @@ if uploaded_file is not None:
             order += 1
             i = m.end()
 
-        # DataFrames base
         df_goles = pd.DataFrame(goles).sort_values("minuto") if goles else pd.DataFrame(columns=["dorsal","jugadora","minuto_txt","minuto"])
-        df_subs  = pd.DataFrame(
-            subs, columns=["entra_dorsal","entra","sale_dorsal","sale","minuto_txt","minuto"]
-        ).sort_values("minuto").reset_index(drop=True) if subs else pd.DataFrame(columns=["entra_dorsal","entra","sale_dorsal","sale","minuto_txt","minuto"])
+        df_subs  = pd.DataFrame(subs )[["entra_dorsal","entra","sale_dorsal","sale","minuto_txt","minuto"]].sort_values("minuto") if subs else pd.DataFrame(columns=["entra_dorsal","entra","sale_dorsal","sale","minuto_txt","minuto"])
         df_tj    = pd.DataFrame(tarjetas).sort_values(["minuto","tipo"]) if tarjetas else pd.DataFrame(columns=["tipo","dorsal","jugadora","minuto_txt","minuto"])
         df_tl    = pd.DataFrame(timeline)[["minuto","minuto_txt","evento","detalle","order"]].sort_values(["minuto","order"]) if timeline else pd.DataFrame(columns=["minuto","minuto_txt","evento","detalle","order"])
-
-        # ---- Fix: eliminar posibles columnas minuto duplicadas ----
-        for col in list(df_subs.columns):
-            if col.startswith("minuto_") and col != "minuto":
-                df_subs = df_subs.drop(columns=[col])
 
         # =========================
         # Asignar equipos a eventos
@@ -288,7 +278,7 @@ if uploaded_file is not None:
             st.info("No se detectaron sustituciones.")
 
         # =========================
-        # Anotaciones tácticas (formaciones, intención->categoría, posiciones)
+        # Anotaciones tácticas (con POSICIONES y orden de columnas)
         # =========================
         st.divider()
         st.subheader("Sustituciones + Anotaciones tácticas")
@@ -323,37 +313,75 @@ if uploaded_file is not None:
                 "Otro":["Otro"]
             }
             INTENT_TO_CAT = {opt: cat for cat, opts in INT_CATS.items() for opt in opts}
-            ALL_INTENT_OPTIONS = sorted(INTENT_TO_CAT.keys())
+            ALL_INTENT_OPTIONS = list(INTENT_TO_CAT.keys())
 
-            # Clave estable de la tabla editable
+            POSICIONES = [
+                # Portería
+                ("POR","PORTERA"),
+                # Defensas/carrileras
+                ("LAD","LATERAL DERECHA"),
+                ("LVD","LATERAL VOLANTE DERECHA"),
+                ("DCD","DEFENSA CENTRAL DERECHA"),
+                ("DCI","DEFENSA CENTRAL IZQUIERDA"),
+                ("LAI","LATERAL IZQUIERDA"),
+                ("LVI","LATERAL VOLANTE IZQUIERDA"),
+                # Medios
+                ("MCC","MEDIOCAMPISTA CENTRAL"),
+                ("MCD","MEDIOCAMPISTA CENTRAL DEFENSIVA"),
+                ("MCO","MEDIOCAMPISTA CENTRAL OFENSIVA"),
+                ("MID","MEDIOCAMPISTA INTERIOR DERECHA"),
+                ("MII","MEDIOCAMPISTA INTERIOR IZQUIERDA"),
+                ("MVD","MEDIA VOLANTE DERECHA"),
+                ("MVI","MEDIA VOLANTE IZQUIERDA"),
+                # Ataque
+                ("EXI","EXTREMA IZQUIERDA"),
+                ("EXD","EXTREMA DERECHA"),
+                ("MEP","MEDIA PUNTA"),
+                ("DEC","DELANTERA CENTRO"),
+                ("SED","SEGUNDA DELANTERA"),
+                ("FNU","FALSA NUEVE"),
+                # Otro
+                ("","(Sin especificar)")
+            ]
+            POS_OPTS = [p[0] for p in POSICIONES]
+
+            # Firma de filas para mantener ediciones al cambiar PDF
             base_now = df_subs_edit[["minuto","entra","sale","equipo"]].copy().sort_values(["minuto","entra","sale","equipo"])
             sig_now = "|".join(base_now.astype(str).agg("||".join, axis=1))
-            key_table = "tabla_anotaciones_v4"
+
+            key_table = "tabla_anotaciones_v5"
             key_sig   = "anot_sig"
 
             if key_table not in st.session_state or st.session_state.get(key_sig, "") != sig_now:
-                base = df_subs_edit[["minuto","entra","sale","equipo"]].copy()
-                base["formacion_antes"]     = ""
-                base["formacion_despues"]   = ""
-                base["intencion_tactica"]   = ""
+                base = df_subs_edit[["minuto","equipo","entra","sale"]].copy()
+                base["pos_sale"]          = ""
+                base["pos_entra"]         = ""
+                base["formacion_antes"]   = ""
+                base["formacion_despues"] = ""
+                base["intencion_tactica"] = ""
                 base["intencion_categoria"] = ""
-                base["intencion_otro"]      = ""
-                # Posiciones
-                base["entra_pos"] = ""
-                base["sale_pos"]  = ""
+                base["intencion_otro"]    = ""
                 st.session_state[key_table] = base
                 st.session_state[key_sig]   = sig_now
             else:
                 current = st.session_state[key_table]
-                merged = df_subs_edit[["minuto","entra","sale","equipo"]].merge(
-                    current.drop_duplicates(subset=["minuto","entra","sale","equipo"]),
-                    on=["minuto","entra","sale","equipo"], how="left"
+                merged = df_subs_edit[["minuto","equipo","entra","sale"]].merge(
+                    current.drop_duplicates(subset=["minuto","equipo","entra","sale"]),
+                    on=["minuto","equipo","entra","sale"], how="left"
                 )
-                for col in ["formacion_antes","formacion_despues","intencion_tactica","intencion_categoria","intencion_otro","entra_pos","sale_pos"]:
+                for col in ["pos_sale","pos_entra","formacion_antes","formacion_despues","intencion_tactica","intencion_categoria","intencion_otro"]:
                     if col not in merged.columns:
                         merged[col] = ""
                     merged[col] = merged[col].fillna("")
                 st.session_state[key_table] = merged
+
+            # Editor con columnas en el orden solicitado
+            COLUMN_ORDER = [
+                "minuto","equipo","entra","pos_sale","sale","pos_entra",
+                "formacion_antes","formacion_despues","intencion_tactica",
+                # (guardamos pero no mostramos 'intencion_categoria' ni 'intencion_otro' al frente)
+                "intencion_categoria","intencion_otro"
+            ]
 
             edited = st.data_editor(
                 st.session_state[key_table],
@@ -362,6 +390,12 @@ if uploaded_file is not None:
                 hide_index=True,
                 num_rows="fixed",
                 column_config={
+                    "pos_sale": st.column_config.SelectboxColumn(
+                        "pos_sale", options=POS_OPTS, help="Posición de la jugadora que SALE."
+                    ),
+                    "pos_entra": st.column_config.SelectboxColumn(
+                        "pos_entra", options=POS_OPTS, help="Posición de la jugadora que ENTRA."
+                    ),
                     "formacion_antes": st.column_config.SelectboxColumn(
                         "formacion_antes", options=[""] + FORMACIONES, help="Siempre con portera: 1-…"
                     ),
@@ -370,47 +404,53 @@ if uploaded_file is not None:
                     ),
                     "intencion_tactica": st.column_config.SelectboxColumn(
                         "intencion_tactica",
-                        options=[""] + ALL_INTENT_OPTIONS,
+                        options=[""] + ALL_INTENT_OPTIONS + ["Otro"],
                         help="Elige la intención; la categoría se asigna en automático."
                     ),
                     "intencion_categoria": st.column_config.TextColumn(
                         "intencion_categoria",
-                        help="Asignada automáticamente según la intención.",
+                        help="Se llena automáticamente según la intención.",
                         disabled=True
                     ),
                     "intencion_otro": st.column_config.TextColumn(
                         "Otro (especifica)", help="Se usa si elegiste 'Otro'."
                     ),
-                    "entra_pos": st.column_config.SelectboxColumn(
-                        "entra_pos", options=[""] + POSITION_OPTIONS, help=POSITION_HELP
-                    ),
-                    "sale_pos": st.column_config.SelectboxColumn(
-                        "sale_pos", options=[""] + POSITION_OPTIONS, help=POSITION_HELP
-                    ),
-                }
+                },
+                column_order=COLUMN_ORDER
             )
 
             # Autorrelleno de categoría según la intención
             for idx, row in edited.iterrows():
                 intent = str(row.get("intencion_tactica","")).strip()
-                if intent in INTENT_TO_CAT:
+                if intent == "Otro":
+                    # Si es "Otro", dejamos categoría como "Otro" solo para referencia
+                    edited.at[idx, "intencion_categoria"] = "Otro"
+                elif intent in INTENT_TO_CAT:
                     edited.at[idx, "intencion_categoria"] = INTENT_TO_CAT[intent]
                 else:
                     if not intent:
                         edited.at[idx, "intencion_categoria"] = ""
 
             st.session_state[key_table] = edited.copy()
-            st.dataframe(edited.sort_values("minuto"), use_container_width=True, hide_index=True)
+            st.dataframe(
+                edited.sort_values(["minuto","equipo"]),
+                use_container_width=True, hide_index=True,
+                column_order=COLUMN_ORDER
+            )
             df_subs_with_notes = edited.copy()
 
         # =========================
-        # Eventos base (debug opcional)
+        # Eventos detectados (base) – debug opcional (minuto único)
         # =========================
         with st.expander("Eventos detectados (base) y línea de tiempo (debug)"):
             c1,c2,c3 = st.columns(3)
             with c1:
                 st.write("**Sustituciones (base)**")
-                st.dataframe(df_subs, use_container_width=True, hide_index=True)
+                # mostramos solo un minuto (no duplicamos minuto_txt)
+                st.dataframe(
+                    df_subs[["sale","minuto"]].rename(columns={"minuto":"minuto"}),
+                    use_container_width=True, hide_index=True
+                )
             with c2:
                 st.write("**Goles (base)**")
                 st.dataframe(df_goles, use_container_width=True, hide_index=True)
@@ -466,7 +506,8 @@ if uploaded_file is not None:
         if not df_subs_edit.empty:
             merged = df_subs_edit.merge(
                 df_subs_with_notes if 'df_subs_with_notes' in locals() else df_subs_edit.assign(
-                    formacion_antes="", formacion_despues="", intencion_tactica="", intencion_categoria="", intencion_otro="", entra_pos="", sale_pos=""
+                    formacion_antes="", formacion_despues="", intencion_tactica="", intencion_categoria="", intencion_otro="",
+                    pos_entra="", pos_sale=""
                 ),
                 on=["minuto","entra","sale","equipo"], how="left"
             )
@@ -497,17 +538,22 @@ if uploaded_file is not None:
                         if g["equipo"]==my_team: my_post+=1
                         elif g["equipo"]==opp_team: opp_post+=1
 
+                # si intencion es "Otro", usar el texto libre
+                inten = row.get("intencion_tactica","")
+                if inten == "Otro":
+                    inten = row.get("intencion_otro","Otro")
+
                 impacto_rows.append({
                     "minuto_cambio": t,
                     "entra": row["entra"],
                     "sale": row["sale"],
-                    "entra_pos": row.get("entra_pos",""),
-                    "sale_pos": row.get("sale_pos",""),
                     "equipo_cambio": my_team,
+                    "pos_entra": row.get("pos_entra",""),
+                    "pos_sale": row.get("pos_sale",""),
                     "formacion_antes": row.get("formacion_antes",""),
                     "formacion_despues": row.get("formacion_despues",""),
                     "intencion_categoria": row.get("intencion_categoria",""),
-                    "intencion_tactica": row.get("intencion_tactica","") if row.get("intencion_tactica","") != "Otro" else row.get("intencion_otro","Otro"),
+                    "intencion_tactica": inten,
                     "marcador_momento": f"{my_t}-{opp_t}",
                     "game_state": game_state,
                     "puntos_momento": pm,
@@ -520,7 +566,7 @@ if uploaded_file is not None:
                     "impacto_ventana": my_post-opp_post
                 })
 
-        cols = ["minuto_cambio","entra","entra_pos","sale","sale_pos","equipo_cambio",
+        cols = ["minuto_cambio","entra","sale","pos_entra","pos_sale","equipo_cambio",
                 "formacion_antes","formacion_despues","intencion_categoria","intencion_tactica",
                 "marcador_momento","game_state","puntos_momento","puntos_finales",
                 "delta_puntos","etiqueta_impacto_puntos",
@@ -533,131 +579,84 @@ if uploaded_file is not None:
             st.info("Completa las **anotaciones** y la asignación de equipos para ver el impacto.")
 
         # =========================
-        # DASHBOARD DEL PARTIDO (sin heatmap)
+        # Gráfico: distribución de intenciones tácticas
         # =========================
         st.divider()
-        st.header("📊 Dashboard del partido")
+        st.subheader("Gráfico de intenciones tácticas")
 
-        df_notes = st.session_state.get("tabla_anotaciones_v4", pd.DataFrame()).copy()
-        if not df_notes.empty:
-            df_notes["intencion_final"] = df_notes.apply(
-                lambda r: (r.get("intencion_otro","").strip()
-                           if isinstance(r.get("intencion_otro",""), str)
-                           and str(r.get("intencion_tactica","")).strip().lower()=="otro"
+        tabla_key = "tabla_anotaciones_v5"
+        if tabla_key not in st.session_state or st.session_state[tabla_key].empty:
+            st.info("Primero captura intenciones tácticas en la tabla de 'Sustituciones + Anotaciones tácticas'.")
+        else:
+            df_notes = st.session_state[tabla_key].copy()
+
+            # Colores Pumas
+            OBSIDIAN  = "#0F1A2B"
+            CLUB_GOLD = "#E8BE83"
+            PALETTE = [OBSIDIAN, CLUB_GOLD, "#1C2A40", "#F1D3A6", "#0B1322", "#D6A86A", "#24344F", "#C99758"]
+
+            tmp = df_notes.copy()
+            tmp["intencion_final"] = tmp.apply(
+                lambda r: (r["intencion_otro"].strip() if isinstance(r.get("intencion_otro",""), str) and str(r.get("intencion_tactica","")).lower()=="otro"
                            else r.get("intencion_tactica","")),
                 axis=1
             )
-        else:
-            df_notes = pd.DataFrame(columns=[
-                "minuto","entra","sale","equipo","formacion_antes",
-                "formacion_despues","intencion_categoria","intencion_tactica",
-                "intencion_otro","intencion_final","entra_pos","sale_pos"
-            ])
 
-        def build_score_series_dash(goals_df: pd.DataFrame, team_a: str, team_b: str):
-            if goals_df.empty or "equipo" not in goals_df.columns: 
-                return []
-            g = goals_df.sort_values("minuto").reset_index(drop=True)
-            series=[]; a=b=0
-            for _,row in g.iterrows():
-                if row["equipo"]==team_a: a+=1
-                elif row["equipo"]==team_b: b+=1
-                series.append((int(row["minuto"]), a, b))
-            return series
+            colf1, colf2, colf3 = st.columns(3)
+            with colf1:
+                filtro_equipo = st.selectbox("Equipo", options=["Todos", my_team, opp_team], index=0)
+            with colf2:
+                nivel = st.radio("Agrupar por", options=["Categoría", "Intención"], horizontal=True, index=1)
+            with colf3:
+                min_count = st.number_input("Mín. ocurrencias para mostrar", min_value=1, max_value=10, value=1, step=1)
 
-        score_series_dash = build_score_series_dash(df_goles_edit, my_team, opp_team)
-        marcador_final = (score_series_dash[-1][1], score_series_dash[-1][2]) if score_series_dash else (0,0)
-
-        # Filtros Dashboard
-        c_f1, c_f2, c_f3 = st.columns([1,1,1])
-        with c_f1:
-            filtro_equipo = st.selectbox("Equipo", options=["Todos", my_team, opp_team], index=0)
-        with c_f2:
-            agrupar_por = st.radio("Nivel", options=["Categoría","Intención"], horizontal=True, index=0)
-        with c_f3:
-            minimo = st.number_input("Mín. ocurrencias para mostrar", min_value=1, max_value=10, value=1, step=1)
-
-        # KPIs
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            st.metric("Goles " + my_team, marcador_final[0])
-        with c2:
-            st.metric("Goles " + opp_team, marcador_final[1])
-        with c3:
-            st.metric("Sustituciones " + my_team, int((df_subs_edit["equipo"]==my_team).sum()) if not df_subs_edit.empty else 0)
-        with c4:
-            st.metric("Sustituciones " + opp_team, int((df_subs_edit["equipo"]==opp_team).sum()) if not df_subs_edit.empty else 0)
-
-        # Impacto resumen
-        st.subheader("Impacto por puntos (mi equipo)")
-        if not df_impacto.empty:
-            imp_counts = df_impacto["etiqueta_impacto_puntos"].value_counts().rename_axis("impacto").reset_index(name="conteo")
-            c_imp1, c_imp2 = st.columns([1.2,1])
-            with c_imp1:
-                st.dataframe(imp_counts, use_container_width=True, hide_index=True)
-            with c_imp2:
-                fig, ax = plt.subplots(figsize=(4.5,3.2))
-                ax.barh(list(reversed(imp_counts["impacto"])), list(reversed(imp_counts["conteo"])))
-                ax.set_title("Impacto (conteo)")
-                st.pyplot(fig, clear_figure=True)
-        else:
-            st.info("Aún no hay impacto calculado (completa asignación de equipos e intenciones).")
-
-        # Distribución intenciones
-        st.subheader("Distribución de cambios por intención")
-        tmp = df_notes.copy()
-        if filtro_equipo != "Todos":
-            tmp = tmp[tmp["equipo"]==filtro_equipo]
-
-        if agrupar_por == "Categoría":
-            serie = tmp["intencion_categoria"].value_counts()
-        else:
-            serie = tmp["intencion_final"].value_counts()
-
-        serie = serie[serie >= minimo]
-
-        c_g1, c_g2 = st.columns([1.2,1])
-        with c_g1:
-            if serie.empty:
-                st.info("Sin datos suficientes para este filtro.")
-            else:
-                st.dataframe(
-                    serie.rename("conteo").reset_index(names=[agrupar_por.lower()]),
-                    use_container_width=True, hide_index=True
-                )
-        with c_g2:
-            if not serie.empty:
-                fig, ax = plt.subplots(figsize=(4.5,3.2))
-                ax.barh(list(reversed(list(serie.index))), list(reversed(list(serie.values))))
-                ax.set_title(f"{agrupar_por}: conteo")
-                st.pyplot(fig, clear_figure=True)
-
-        # Evolución del marcador
-        st.subheader("Evolución del marcador")
-        if score_series_dash:
-            df_score = pd.DataFrame(score_series_dash, columns=["minuto","goles_"+my_team,"goles_"+opp_team])
-            st.line_chart(df_score.set_index("minuto"))
-        else:
-            st.info("No hay goles registrados para trazar la evolución del marcador.")
-
-        # Tabla de cambios con notas
-        st.subheader("Sustituciones con notas (resumen)")
-        cols_show = ["minuto","equipo","entra","entra_pos","sale","sale_pos","formacion_antes","formacion_despues","intencion_categoria","intencion_final"]
-        if df_notes.empty:
-            st.info("Aún no hay anotaciones tácticas capturadas.")
-        else:
-            df_view = df_notes.copy()
             if filtro_equipo != "Todos":
-                df_view = df_view[df_view["equipo"]==filtro_equipo]
-            df_view = df_view.sort_values("minuto")
-            # si no existen las columnas de posición (por archivos viejos), crearlas vacías
-            for c in ["entra_pos","sale_pos"]:
-                if c not in df_view.columns:
-                    df_view[c] = ""
-            st.dataframe(
-                df_view.reindex(columns=[c for c in cols_show if c in df_view.columns]),
-                use_container_width=True, hide_index=True
-            )
+                tmp = tmp[tmp["equipo"] == filtro_equipo]
+
+            if nivel == "Categoría":
+                serie = tmp["intencion_categoria"].value_counts()
+                titulo = f"Intenciones tácticas por categoría — {filtro_equipo}"
+            else:
+                serie = tmp["intencion_final"].value_counts()
+                titulo = f"Intenciones tácticas — {filtro_equipo}"
+
+            serie = serie[serie >= min_count]
+
+            if serie.empty:
+                st.info("Sin datos suficientes para graficar con los filtros actuales.")
+            else:
+                labels = list(serie.index)
+                counts = list(serie.values)
+                colors = (PALETTE * ((len(labels)//len(PALETTE))+1))[:len(labels)]
+
+                c1, c2 = st.columns(2)
+
+                # Donut
+                with c1:
+                    fig, ax = plt.subplots(figsize=(5.5, 5.5))
+                    wedges, _ = ax.pie(
+                        counts, labels=None, startangle=90, colors=colors,
+                        wedgeprops={"linewidth": 1, "edgecolor": "white"}
+                    )
+                    centre_circle = plt.Circle((0, 0), 0.60, fc="white")
+                    fig.gca().add_artist(centre_circle)
+                    ax.set_title(titulo, fontsize=12)
+                    ax.legend(wedges, [f"{l} ({c})" for l, c in zip(labels, counts)],
+                              loc="center left", bbox_to_anchor=(1, 0.5))
+                    st.pyplot(fig, clear_figure=True)
+
+                # Barra horizontal
+                with c2:
+                    fig2, ax2 = plt.subplots(figsize=(6.5, 5.5))
+                    y_pos = list(range(len(labels)))[::-1]
+                    ax2.barh(y_pos, counts[::-1], color=colors[::-1])
+                    ax2.set_yticks(y_pos)
+                    ax2.set_yticklabels(labels[::-1])
+                    ax2.set_xlabel("Ocurrencias")
+                    ax2.set_title("Distribución (barra)")
+                    for i, v in enumerate(counts[::-1]):
+                        ax2.text(v + 0.05, i, str(v), va="center")
+                    st.pyplot(fig2, clear_figure=True)
 
     except Exception as e:
         st.error(f"No se pudo leer o procesar el PDF. Detalle técnico: {e}")
