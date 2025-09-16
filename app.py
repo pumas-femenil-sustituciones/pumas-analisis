@@ -82,7 +82,7 @@ PRETTY.update({
     "pumas":"Pumas","queretaro":"Querétaro","rayadas":"Rayadas"
 })
 
-def canon_to_pretty(c): 
+def canon_to_pretty(c):
     return PRETTY.get(c, c.title())
 
 def alias_to_canon(token: str) -> str | None:
@@ -277,7 +277,7 @@ if uploaded_file is not None:
             st.info("No se detectaron sustituciones.")
 
         # =========================
-        # Anotaciones tácticas (intención -> categoría automática)
+        # Anotaciones tácticas (con posiciones por jugadora)
         # =========================
         st.divider()
         st.subheader("Sustituciones + Anotaciones tácticas")
@@ -286,10 +286,25 @@ if uploaded_file is not None:
             st.info("No hay sustituciones para anotar.")
             df_subs_with_notes = df_subs_edit.copy()
         else:
+            # Formaciones
             FORMACIONES = [
                 "1-4-4-2 (doble contención)","1-4-4-2 (diamante)","1-4-3-3","1-4-2-3-1",
                 "1-3-5-2","1-5-3-2","1-5-4-1","Otro"
             ]
+            # Posiciones (siglas)
+            POS_OPTS = [
+                "POR","LAD","LVD","DCD","DCI","LAI","LVI",
+                "MCC","MCD","MCO","MID","MII",
+                "EXI","EXD","MEP","DEC","SED","FNU"
+            ]
+            POS_HELP = (
+                "POR Portera · LAD Lateral Der · LVD Lateral Volante Der · "
+                "DCD Central Der · DCI Central Izq · LAI Lateral Izq · LVI Lateral Volante Izq · "
+                "MCC MC Central · MCD MC Defensiva · MCO MC Ofensiva · MID Interior Der · MII Interior Izq · "
+                "EXI Extrema Izq · EXD Extrema Der · MEP Media punta · DEC Delantera Centro · SED Segunda Delantera · FNU Falsa Nueve"
+            )
+
+            # Intenciones y categorías
             INT_CATS = {
                 "Estratégicas / de planteamiento":[
                     "Presionar","Todo al ataque","Contener","Cerrar marcador",
@@ -314,14 +329,19 @@ if uploaded_file is not None:
             INTENT_TO_CAT = {opt: cat for cat, opts in INT_CATS.items() for opt in opts}
             ALL_INTENT_OPTIONS = sorted(INTENT_TO_CAT.keys())
 
+            # firma para persistencia
             base_now = df_subs_edit[["minuto","entra","sale","equipo"]].copy().sort_values(["minuto","entra","sale","equipo"])
             sig_now = "|".join(base_now.astype(str).agg("||".join, axis=1))
 
-            key_table = "tabla_anotaciones_v4"
+            key_table = "tabla_anotaciones_v5"  # nueva versión por columnas entra_pos/sale_pos
             key_sig   = "anot_sig"
 
             if key_table not in st.session_state or st.session_state.get(key_sig, "") != sig_now:
                 base = df_subs_edit[["minuto","entra","sale","equipo"]].copy()
+                # nuevas columnas de posición por jugadora
+                base["entra_pos"] = ""
+                base["sale_pos"]  = ""
+                # tácticas/forma
                 base["formacion_antes"]   = ""
                 base["formacion_despues"] = ""
                 base["intencion_tactica"]   = ""
@@ -335,25 +355,46 @@ if uploaded_file is not None:
                     current.drop_duplicates(subset=["minuto","entra","sale","equipo"]),
                     on=["minuto","entra","sale","equipo"], how="left"
                 )
-                for col in ["formacion_antes","formacion_despues","intencion_tactica","intencion_categoria","intencion_otro"]:
+                for col in [
+                    "entra_pos","sale_pos",
+                    "formacion_antes","formacion_despues",
+                    "intencion_tactica","intencion_categoria","intencion_otro"
+                ]:
                     if col not in merged.columns:
                         merged[col] = ""
                     merged[col] = merged[col].fillna("")
                 st.session_state[key_table] = merged
 
+            # reordenar columnas para que las posiciones queden junto a la jugadora
+            view = st.session_state[key_table].copy()
+            view = view[[
+                "minuto","entra","entra_pos","sale","sale_pos","equipo",
+                "formacion_antes","formacion_despues",
+                "intencion_tactica","intencion_categoria","intencion_otro"
+            ]]
+
             edited = st.data_editor(
-                st.session_state[key_table],
+                view,
                 key="anot_editor",
                 use_container_width=True,
                 hide_index=True,
                 num_rows="fixed",
                 column_config={
+                    # posiciones por jugadora
+                    "entra_pos": st.column_config.SelectboxColumn(
+                        "entra_pos", options=[""] + POS_OPTS, help=POS_HELP
+                    ),
+                    "sale_pos": st.column_config.SelectboxColumn(
+                        "sale_pos", options=[""] + POS_OPTS, help=POS_HELP
+                    ),
+                    # formaciones
                     "formacion_antes": st.column_config.SelectboxColumn(
                         "formacion_antes", options=[""] + FORMACIONES, help="Siempre con portera: 1-…"
                     ),
                     "formacion_despues": st.column_config.SelectboxColumn(
                         "formacion_despues", options=[""] + FORMACIONES
                     ),
+                    # intención primero (categoría se autocompleta)
                     "intencion_tactica": st.column_config.SelectboxColumn(
                         "intencion_tactica",
                         options=[""] + ALL_INTENT_OPTIONS,
@@ -370,7 +411,7 @@ if uploaded_file is not None:
                 }
             )
 
-            # Autorrelleno de categoría según la intención
+            # Autorrelleno de categoría según intención
             for idx, row in edited.iterrows():
                 intent = str(row.get("intencion_tactica","")).strip()
                 if intent in INTENT_TO_CAT:
@@ -379,9 +420,14 @@ if uploaded_file is not None:
                     if not intent:
                         edited.at[idx, "intencion_categoria"] = ""
 
-            st.session_state[key_table] = edited.copy()
+            # Guardar de vuelta respetando el orden de columnas original del storage
+            saved = edited.copy()
+            # reconstruimos el orden del storage
+            saved = saved.rename_axis(None, axis=1)
+            st.session_state[key_table] = saved[st.session_state[key_table].columns.intersection(saved.columns)].combine_first(saved)
+
             st.dataframe(edited.sort_values("minuto"), use_container_width=True, hide_index=True)
-            df_subs_with_notes = edited.copy()
+            df_subs_with_notes = st.session_state[key_table].copy()
 
         # =========================
         # Eventos base (debug opcional)
@@ -446,7 +492,9 @@ if uploaded_file is not None:
         if not df_subs_edit.empty:
             merged = df_subs_edit.merge(
                 df_subs_with_notes if 'df_subs_with_notes' in locals() else df_subs_edit.assign(
-                    formacion_antes="", formacion_despues="", intencion_tactica="", intencion_categoria="", intencion_otro=""
+                    entra_pos="", sale_pos="",
+                    formacion_antes="", formacion_despues="",
+                    intencion_tactica="", intencion_categoria="", intencion_otro=""
                 ),
                 on=["minuto","entra","sale","equipo"], how="left"
             )
@@ -482,6 +530,8 @@ if uploaded_file is not None:
                     "entra": row["entra"],
                     "sale": row["sale"],
                     "equipo_cambio": my_team,
+                    "entra_pos": row.get("entra_pos",""),
+                    "sale_pos":  row.get("sale_pos",""),
                     "formacion_antes": row.get("formacion_antes",""),
                     "formacion_despues": row.get("formacion_despues",""),
                     "intencion_categoria": row.get("intencion_categoria",""),
@@ -498,7 +548,7 @@ if uploaded_file is not None:
                     "impacto_ventana": my_post-opp_post
                 })
 
-        cols = ["minuto_cambio","entra","sale","equipo_cambio",
+        cols = ["minuto_cambio","entra","entra_pos","sale","sale_pos","equipo_cambio",
                 "formacion_antes","formacion_despues","intencion_categoria","intencion_tactica",
                 "marcador_momento","game_state","puntos_momento","puntos_finales",
                 "delta_puntos","etiqueta_impacto_puntos",
@@ -516,7 +566,7 @@ if uploaded_file is not None:
         st.divider()
         st.subheader("Gráfico de intenciones tácticas")
 
-        tabla_key = "tabla_anotaciones_v4"
+        tabla_key = "tabla_anotaciones_v5"
         if tabla_key not in st.session_state or st.session_state[tabla_key].empty:
             st.info("Primero captura intenciones tácticas en la tabla de 'Sustituciones + Anotaciones tácticas'.")
         else:
@@ -528,7 +578,6 @@ if uploaded_file is not None:
             PALETTE = [OBSIDIAN, CLUB_GOLD, "#1C2A40", "#F1D3A6", "#0B1322", "#D6A86A", "#24344F", "#C99758"]
 
             tmp = df_notes.copy()
-            # normalizar "Otro"
             tmp["intencion_final"] = tmp.apply(
                 lambda r: (r["intencion_otro"].strip() if isinstance(r.get("intencion_otro",""), str) and str(r.get("intencion_tactica","")).lower()=="otro"
                            else r.get("intencion_tactica","")),
@@ -556,42 +605,3 @@ if uploaded_file is not None:
             serie = serie[serie >= min_count]
 
             if serie.empty:
-                st.info("Sin datos suficientes para graficar con los filtros actuales.")
-            else:
-                labels = list(serie.index)
-                counts = list(serie.values)
-                colors = (PALETTE * ((len(labels)//len(PALETTE))+1))[:len(labels)]
-
-                c1, c2 = st.columns(2)
-
-                # Donut
-                with c1:
-                    fig, ax = plt.subplots(figsize=(5.5, 5.5))
-                    wedges, _ = ax.pie(
-                        counts, labels=None, startangle=90, colors=colors,
-                        wedgeprops={"linewidth": 1, "edgecolor": "white"}
-                    )
-                    centre_circle = plt.Circle((0, 0), 0.60, fc="white")
-                    fig.gca().add_artist(centre_circle)
-                    ax.set_title(titulo, fontsize=12)
-                    ax.legend(wedges, [f"{l} ({c})" for l, c in zip(labels, counts)],
-                              loc="center left", bbox_to_anchor=(1, 0.5))
-                    st.pyplot(fig, clear_figure=True)
-
-                # Barra horizontal
-                with c2:
-                    fig2, ax2 = plt.subplots(figsize=(6.5, 5.5))
-                    y_pos = list(range(len(labels)))[::-1]
-                    ax2.barh(y_pos, counts[::-1], color=colors[::-1])
-                    ax2.set_yticks(y_pos)
-                    ax2.set_yticklabels(labels[::-1])
-                    ax2.set_xlabel("Ocurrencias")
-                    ax2.set_title("Distribución (barra)")
-                    for i, v in enumerate(counts[::-1]):
-                        ax2.text(v + 0.05, i, str(v), va="center")
-                    st.pyplot(fig2, clear_figure=True)
-
-    except Exception as e:
-        st.error(f"No se pudo leer o procesar el PDF. Detalle técnico: {e}")
-else:
-    st.info("⬆️ Arriba puedes subir el PDF del Informe Arbitral.")
