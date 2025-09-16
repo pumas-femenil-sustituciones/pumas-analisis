@@ -1,10 +1,13 @@
-# app.py
+# =========================
+# Análisis de Sustituciones – Beta (Liga MX Femenil)
+# =========================
 import streamlit as st
 import pdfplumber
 from unidecode import unidecode
 import re
 import pandas as pd
 from collections import Counter
+import numpy as np
 import matplotlib.pyplot as plt
 
 # =========================
@@ -14,10 +17,9 @@ st.set_page_config(page_title="Análisis de Sustituciones – Beta", page_icon="
 st.title("Análisis de Sustituciones – Beta (Liga MX Femenil)")
 st.write("Sube el PDF del Informe Arbitral para procesarlo y analizarlo.")
 
-# Paleta Pumas (para gráficos)
+# Colores del dashboard (Pumas)
 OBSIDIAN  = "#0F1A2B"
 CLUB_GOLD = "#E8BE83"
-PALETTE   = [OBSIDIAN, CLUB_GOLD, "#1C2A40", "#F1D3A6", "#0B1322", "#D6A86A", "#24344F", "#C99758"]
 
 # =========================
 # Helpers
@@ -87,7 +89,6 @@ PRETTY.update({
     "juarez":"Juárez","leon":"León","mazatlan":"Mazatlán","puebla":"Puebla",
     "pumas":"Pumas","queretaro":"Querétaro","rayadas":"Rayadas"
 })
-
 def canon_to_pretty(c): 
     return PRETTY.get(c, c.title())
 
@@ -143,11 +144,11 @@ def detect_match_teams(full_text: str) -> list[str]:
     return []
 
 # =========================
-# Catálogos (formaciones, intenciones, posiciones)
+# Catálogos de UI
 # =========================
 FORMACIONES = [
-    "1-4-4-2 (doble contención)","1-4-4-2 (diamante)","1-4-3-3",
-    "1-4-2-3-1","1-3-5-2","1-5-3-2","1-5-4-1","Otro"
+    "1-4-4-2 (doble contención)","1-4-4-2 (diamante)","1-4-3-3","1-4-2-3-1",
+    "1-3-5-2","1-5-3-2","1-5-4-1","Otro"
 ]
 
 INT_CATS = {
@@ -174,30 +175,35 @@ INT_CATS = {
 INTENT_TO_CAT = {opt: cat for cat, opts in INT_CATS.items() for opt in opts}
 ALL_INTENT_OPTIONS = sorted(INTENT_TO_CAT.keys())
 
-# POSICIONES — (ACTUALIZADO con MVD y MVI)
-POSICIONES = [
-    "POR - PORTERA",
-    "LAD - LATERAL DERECHA",
-    "LVD - LATERAL VOLANTE DERECHA",
-    "MVD - MEDIA VOLANTE DERECHA",
-    "DCD - DEFENSA CENTRAL DERECHA",
-    "DCI - DEFENSA CENTRAL IZQUIERDA",
-    "LAI - LATERAL IZQUIERDA",
-    "LVI - LATERAL VOLANTE IZQUIERDA",
-    "MVI - MEDIA VOLANTE IZQUIERDA",
-    "MCC - MEDIOCAMPISTA CENTRAL",
-    "MCD - MEDIOCAMPISTA CENTRAL DEFENSIVA",
-    "MCO - MEDIOCAMPISTA CENTRAL OFENSIVA",
-    "MID - MEDIOCAMPISTA INTERIOR DERECHA",
-    "MII - MEDIOCAMPISTA INTERIOR IZQUIERDA",
-    "EXI - EXTREMA IZQUIERDA",
-    "EXD - EXTREMA DERECHA",
-    "MEP - MEDIA PUNTA",
-    "DEC - DELANTERA CENTRO",
-    "SED - SEGUNDA DELANTERA",
-    "FNU - FALSA NUEVE",
-    "Otro"
+# Posiciones (entra/sale)
+POSITION_OPTIONS = [
+    "POR",
+    "LAD","LVD","DCD","DCI","LAI","LVI",
+    "MCC","MCD","MCO","MID","MII","MVD","MVI",
+    "EXI","EXD","MEP","DEC","SED","FNU"
 ]
+POSITION_HELP = {
+    "POR":"PORTERA",
+    "LAD":"LATERAL DERECHA",
+    "LVD":"LATERAL VOLANTE DERECHA",
+    "DCD":"DEFENSA CENTRAL DERECHA",
+    "DCI":"DEFENSA CENTRAL IZQUIERDA",
+    "LAI":"LATERAL IZQUIERDA",
+    "LVI":"LATERAL VOLANTE IZQUIERDA",
+    "MCC":"MEDIOCAMPISTA CENTRAL",
+    "MCD":"MEDIOCAMPISTA CENTRAL DEFENSIVA",
+    "MCO":"MEDIOCAMPISTA CENTRAL OFENSIVA",
+    "MID":"MEDIOCAMPISTA INTERIOR DERECHA",
+    "MII":"MEDIOCAMPISTA INTERIOR IZQUIERDA",
+    "MVD":"MEDIA VOLANTE DERECHA",
+    "MVI":"MEDIA VOLANTE IZQUIERDA",
+    "EXI":"EXTREMA IZQUIERDA",
+    "EXD":"EXTREMA DERECHA",
+    "MEP":"MEDIA PUNTA",
+    "DEC":"DELANTERA CENTRO",
+    "SED":"SEGUNDA DELANTERA",
+    "FNU":"FALSA NUEVE"
+}
 
 # =========================
 # Sidebar
@@ -290,16 +296,8 @@ if uploaded_file is not None:
                     m.group(5)
                 )
                 minuto = parse_minuto(minuto_txt)
-                subs.append({
-                    "entra_dorsal":entra_d,"entra":entra_n,
-                    "sale_dorsal":sale_d,"sale":sale_n,
-                    "minuto_txt":minuto_txt,"minuto":minuto
-                })
-                timeline.append({
-                    "order":order,"minuto":minuto,"minuto_txt":minuto_txt,
-                    "evento":"Sustitución",
-                    "detalle":f"Entra ({entra_d}) {entra_n} por ({sale_d}) {sale_n}"
-                })
+                subs.append({"entra_dorsal":entra_d,"entra":entra_n,"sale_dorsal":sale_d,"sale":sale_n,"minuto_txt":minuto_txt,"minuto":minuto})
+                timeline.append({"order":order,"minuto":minuto,"minuto_txt":minuto_txt,"evento":"Sustitución","detalle":f"Entra ({entra_d}) {entra_n} por ({sale_d}) {sale_n}"})
             order += 1
             i = m.end()
 
@@ -348,7 +346,7 @@ if uploaded_file is not None:
             st.info("No se detectaron sustituciones.")
 
         # =========================
-        # Anotaciones tácticas + POSICIONES (entra/sale)
+        # Anotaciones tácticas (intención -> categoría automática + posiciones)
         # =========================
         st.divider()
         st.subheader("Sustituciones + Anotaciones tácticas")
@@ -357,25 +355,22 @@ if uploaded_file is not None:
             st.info("No hay sustituciones para anotar.")
             df_subs_with_notes = df_subs_edit.copy()
         else:
-            # Firma para mantener ediciones entre reruns
             base_now = df_subs_edit[["minuto","entra","sale","equipo"]].copy().sort_values(["minuto","entra","sale","equipo"])
             sig_now = "|".join(base_now.astype(str).agg("||".join, axis=1))
 
-            key_table = "tabla_anotaciones_v5"   # versión incrementada
+            key_table = "tabla_anotaciones_v5_pos"
             key_sig   = "anot_sig"
 
             if key_table not in st.session_state or st.session_state.get(key_sig, "") != sig_now:
                 base = df_subs_edit[["minuto","entra","sale","equipo"]].copy()
-                # NUEVO: posiciones
-                base["entra_pos"] = ""
-                base["sale_pos"]  = ""
-                # Formaciones
                 base["formacion_antes"]   = ""
                 base["formacion_despues"] = ""
-                # Intención táctica
                 base["intencion_tactica"]   = ""
                 base["intencion_categoria"] = ""
                 base["intencion_otro"]      = ""
+                # Posiciones
+                base["pos_entra"] = ""
+                base["pos_sale"]  = ""
                 st.session_state[key_table] = base
                 st.session_state[key_sig]   = sig_now
             else:
@@ -384,11 +379,7 @@ if uploaded_file is not None:
                     current.drop_duplicates(subset=["minuto","entra","sale","equipo"]),
                     on=["minuto","entra","sale","equipo"], how="left"
                 )
-                for col in [
-                    "entra_pos","sale_pos",
-                    "formacion_antes","formacion_despues",
-                    "intencion_tactica","intencion_categoria","intencion_otro"
-                ]:
+                for col in ["formacion_antes","formacion_despues","intencion_tactica","intencion_categoria","intencion_otro","pos_entra","pos_sale"]:
                     if col not in merged.columns:
                         merged[col] = ""
                     merged[col] = merged[col].fillna("")
@@ -401,30 +392,31 @@ if uploaded_file is not None:
                 hide_index=True,
                 num_rows="fixed",
                 column_config={
-                    # POSICIONES
-                    "entra_pos": st.column_config.SelectboxColumn(
-                        "entra_pos", options=[""] + POSICIONES,
-                        help="Posición de la jugadora que entra."
-                    ),
-                    "sale_pos": st.column_config.SelectboxColumn(
-                        "sale_pos", options=[""] + POSICIONES,
-                        help="Posición de la jugadora que sale."
-                    ),
-                    # FORMACIONES
                     "formacion_antes": st.column_config.SelectboxColumn(
                         "formacion_antes", options=[""] + FORMACIONES, help="Siempre con portera: 1-…"
                     ),
                     "formacion_despues": st.column_config.SelectboxColumn(
                         "formacion_despues", options=[""] + FORMACIONES
                     ),
-                    # INTENCIÓN (categoría se llena sola)
+                    # Posiciones (entra/sale)
+                    "pos_entra": st.column_config.SelectboxColumn(
+                        "pos_entra", options=[""] + POSITION_OPTIONS,
+                        help="Posición de la jugadora que ENTRA (ej. MCD, EXD, etc.)"
+                    ),
+                    "pos_sale": st.column_config.SelectboxColumn(
+                        "pos_sale", options=[""] + POSITION_OPTIONS,
+                        help="Posición de la jugadora que SALE (ej. DCI, MVI, etc.)"
+                    ),
+                    # Intención primero, la categoría se llena sola
                     "intencion_tactica": st.column_config.SelectboxColumn(
-                        "intencion_tactica", options=[""] + ALL_INTENT_OPTIONS,
-                        help="Elige la intención; la categoría se completa automáticamente."
+                        "intencion_tactica",
+                        options=[""] + ALL_INTENT_OPTIONS,
+                        help="Elige la intención; la categoría se asigna en automático."
                     ),
                     "intencion_categoria": st.column_config.TextColumn(
-                        "intencion_categoria", disabled=True,
-                        help="Asignada automáticamente según la intención."
+                        "intencion_categoria",
+                        help="Asignada automáticamente según la intención.",
+                        disabled=True
                     ),
                     "intencion_otro": st.column_config.TextColumn(
                         "Otro (especifica)", help="Se usa si elegiste 'Otro'."
@@ -446,22 +438,34 @@ if uploaded_file is not None:
             df_subs_with_notes = edited.copy()
 
         # =========================
-        # Eventos base (debug opcional)
+        # Eventos base (debug opcional) – sin minuto duplicado
         # =========================
         with st.expander("Eventos detectados (base) y línea de tiempo (debug)"):
-            c1,c2,c3 = st.columns(3)
+            subs_base_view = df_subs.copy()
+            for col_to_drop in ["minuto_txt", "minuto_", "entra_dorsal", "sale_dorsal"]:
+                if col_to_drop in subs_base_view.columns:
+                    subs_base_view = subs_base_view.drop(columns=[col_to_drop])
+            cols_order = [c for c in ["minuto", "entra", "sale", "equipo"] if c in subs_base_view.columns]
+            subs_base_view = subs_base_view[cols_order + [c for c in subs_base_view.columns if c not in cols_order]]
+
+            goles_base_view = df_goles.copy()
+            if "minuto_txt" in goles_base_view.columns:
+                goles_base_view = goles_base_view.drop(columns=["minuto_txt"])
+
+            c1, c2, c3 = st.columns(3)
             with c1:
                 st.write("**Sustituciones (base)**")
-                st.dataframe(df_subs, use_container_width=True, hide_index=True)
+                st.dataframe(subs_base_view, use_container_width=True, hide_index=True)
             with c2:
                 st.write("**Goles (base)**")
-                st.dataframe(df_goles, use_container_width=True, hide_index=True)
+                st.dataframe(goles_base_view, use_container_width=True, hide_index=True)
             with c3:
                 st.write("**Tarjetas**")
                 st.dataframe(df_tj, use_container_width=True, hide_index=True)
 
             st.caption(f"Resumen — Sustituciones: {len(df_subs)} | Goles: {len(df_goles)} | Tarjetas: {len(df_tj)}")
 
+            st.subheader("Línea de tiempo")
             if not df_tl.empty:
                 st.dataframe(df_tl.drop(columns=["order"]), use_container_width=True, hide_index=True)
             else:
@@ -508,9 +512,7 @@ if uploaded_file is not None:
         if not df_subs_edit.empty:
             merged = df_subs_edit.merge(
                 df_subs_with_notes if 'df_subs_with_notes' in locals() else df_subs_edit.assign(
-                    entra_pos="", sale_pos="",
-                    formacion_antes="", formacion_despues="",
-                    intencion_tactica="", intencion_categoria="", intencion_otro=""
+                    formacion_antes="", formacion_despues="", intencion_tactica="", intencion_categoria="", intencion_otro="", pos_entra="", pos_sale=""
                 ),
                 on=["minuto","entra","sale","equipo"], how="left"
             )
@@ -546,10 +548,10 @@ if uploaded_file is not None:
                     "entra": row["entra"],
                     "sale": row["sale"],
                     "equipo_cambio": my_team,
-                    "entra_pos": row.get("entra_pos",""),
-                    "sale_pos":  row.get("sale_pos",""),
                     "formacion_antes": row.get("formacion_antes",""),
                     "formacion_despues": row.get("formacion_despues",""),
+                    "pos_entra": row.get("pos_entra",""),
+                    "pos_sale": row.get("pos_sale",""),
                     "intencion_categoria": row.get("intencion_categoria",""),
                     "intencion_tactica": row.get("intencion_tactica","") if row.get("intencion_tactica","") != "Otro" else row.get("intencion_otro","Otro"),
                     "marcador_momento": f"{my_t}-{opp_t}",
@@ -564,13 +566,12 @@ if uploaded_file is not None:
                     "impacto_ventana": my_post-opp_post
                 })
 
-        cols = [
-            "minuto_cambio","entra","entra_pos","sale","sale_pos","equipo_cambio",
-            "formacion_antes","formacion_despues","intencion_categoria","intencion_tactica",
-            "marcador_momento","game_state","puntos_momento","puntos_finales",
-            "delta_puntos","etiqueta_impacto_puntos",
-            "ventana_min","goles_mi_equipo_post","goles_rival_post","impacto_ventana"
-        ]
+        cols = ["minuto_cambio","entra","sale","equipo_cambio",
+                "formacion_antes","formacion_despues","pos_entra","pos_sale",
+                "intencion_categoria","intencion_tactica",
+                "marcador_momento","game_state","puntos_momento","puntos_finales",
+                "delta_puntos","etiqueta_impacto_puntos",
+                "ventana_min","goles_mi_equipo_post","goles_rival_post","impacto_ventana"]
         df_impacto = pd.DataFrame(impacto_rows)[cols] if impacto_rows else pd.DataFrame(columns=cols)
 
         if not df_impacto.empty:
@@ -584,17 +585,17 @@ if uploaded_file is not None:
         st.divider()
         st.subheader("Gráfico de intenciones tácticas")
 
-        tabla_key = "tabla_anotaciones_v5"
+        tabla_key = "tabla_anotaciones_v5_pos"
         if tabla_key not in st.session_state or st.session_state[tabla_key].empty:
             st.info("Primero captura intenciones tácticas en la tabla de 'Sustituciones + Anotaciones tácticas'.")
         else:
             df_notes = st.session_state[tabla_key].copy()
 
+            PALETTE = [OBSIDIAN, CLUB_GOLD, "#1C2A40", "#F1D3A6", "#0B1322", "#D6A86A", "#24344F", "#C99758"]
+
             tmp = df_notes.copy()
-            # normalizar "Otro"
             tmp["intencion_final"] = tmp.apply(
-                lambda r: (r["intencion_otro"].strip() if isinstance(r.get("intencion_otro",""), str)
-                           and str(r.get("intencion_tactica","")).lower()=="otro"
+                lambda r: (r["intencion_otro"].strip() if isinstance(r.get("intencion_otro",""), str) and str(r.get("intencion_tactica","")).lower()=="otro"
                            else r.get("intencion_tactica","")),
                 axis=1
             )
@@ -654,6 +655,97 @@ if uploaded_file is not None:
                     for i, v in enumerate(counts[::-1]):
                         ax2.text(v + 0.05, i, str(v), va="center")
                     st.pyplot(fig2, clear_figure=True)
+
+        # =========================
+        # Heatmap (mapa de calor) – CSV opcional
+        # =========================
+        st.divider()
+        st.subheader("Mapa de calor (toques/acciones) – carga opcional")
+
+        st.caption(
+            "Sube un CSV con columnas **x, y, equipo, jugadora, minuto** (x,y en rango 0–100 sobre el campo). "
+            "Si no subes nada, verás instrucciones y un ejemplo sintético."
+        )
+        hm_file = st.file_uploader("CSV con eventos (x,y)", type=["csv"], key="hm_csv")
+
+        def draw_pitch(ax):
+            # Campo simple (100x100)
+            ax.set_facecolor("#0b1a2b")
+            ax.add_patch(plt.Rectangle((0,0), 100, 100, fill=False, edgecolor="white", linewidth=1.2))
+            ax.add_line(plt.Line2D([50,50],[0,100], color="white", linewidth=1.0))
+            # Áreas
+            ax.add_patch(plt.Rectangle((0,21.1), 16.5, 57.8, fill=False, edgecolor="white", linewidth=1.0))
+            ax.add_patch(plt.Rectangle((83.5,21.1), 16.5, 57.8, fill=False, edgecolor="white", linewidth=1.0))
+            # Círculo central
+            circ = plt.Circle((50,50), 9.15, fill=False, color="white", linewidth=1.0)
+            ax.add_patch(circ)
+            ax.set_xlim(0,100); ax.set_ylim(0,100)
+            ax.set_xticks([]); ax.set_yticks([])
+            ax.set_aspect('equal')
+
+        def plot_heat(events_df, title):
+            if events_df.empty:
+                st.info("No hay eventos para el mapa de calor.")
+                return
+            x = events_df["x"].clip(0, 100).astype(float).values
+            y = events_df["y"].clip(0, 100).astype(float).values
+
+            # Histograma 2D
+            H, xedges, yedges = np.histogram2d(x, y, bins=[25, 25], range=[[0,100],[0,100]])
+            H = H.T  # para que concuerde con el eje
+
+            fig, ax = plt.subplots(figsize=(6.5, 9))
+            draw_pitch(ax)
+            im = ax.imshow(
+                H, extent=[0,100,0,100], origin='lower',
+                cmap="YlOrRd", alpha=0.75
+            )
+            ax.set_title(title)
+            cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+            cbar.set_label("Densidad")
+            st.pyplot(fig, clear_figure=True)
+
+        try:
+            if hm_file is not None:
+                df_hm = pd.read_csv(hm_file)
+                required_cols = {"x","y"}
+                if not required_cols.issubset(set(map(str.lower, df_hm.columns))):
+                    st.error("El CSV debe contener al menos columnas: x, y (también puedes incluir equipo, jugadora, minuto).")
+                else:
+                    # normaliza columnas
+                    cols_map = {c: c.lower() for c in df_hm.columns}
+                    df_hm = df_hm.rename(columns=cols_map)
+                    df_hm["x"] = pd.to_numeric(df_hm["x"], errors="coerce")
+                    df_hm["y"] = pd.to_numeric(df_hm["y"], errors="coerce")
+                    df_hm = df_hm.dropna(subset=["x","y"])
+                    # Filtros opcionales
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        filtro_equipo_hm = st.selectbox("Equipo (heatmap)", options=["Todos", my_team, opp_team], index=0)
+                    with c2:
+                        jug_list = ["Todos"] + sorted([j for j in df_hm.get("jugadora", pd.Series(dtype=str)).dropna().unique()])
+                        filtro_jug = st.selectbox("Jugadora (heatmap)", options=jug_list, index=0)
+                    df_plot = df_hm.copy()
+                    if filtro_equipo_hm != "Todos" and "equipo" in df_plot.columns:
+                        df_plot = df_plot[df_plot["equipo"]==filtro_equipo_hm]
+                    if filtro_jug != "Todos" and "jugadora" in df_plot.columns:
+                        df_plot = df_plot[df_plot["jugadora"]==filtro_jug]
+                    plot_heat(df_plot, "Mapa de calor")
+            else:
+                st.markdown(
+                    "- **Formato**: CSV con columnas `x,y` (0-100). Opcional: `equipo`, `jugadora`, `minuto`.\n"
+                    "- **Sugerencia**: Puedes exportar toques/ubicaciones desde tu proveedor de datos y subirlos tal cual.\n"
+                    "- **Nota**: El color muestra densidad (más amarillo/rojo = más acciones)."
+                )
+                # Pequeño ejemplo sintético (para mostrar el look)
+                rng = np.random.default_rng(7)
+                df_fake = pd.DataFrame({
+                    "x": rng.normal(60, 12, 250).clip(0,100),
+                    "y": rng.normal(50, 18, 250).clip(0,100),
+                })
+                plot_heat(df_fake, "Ejemplo sintético (ilustrativo)")
+        except Exception as e:
+            st.warning(f"No se pudo generar el heatmap: {e}")
 
     except Exception as e:
         st.error(f"No se pudo leer o procesar el PDF. Detalle técnico: {e}")
