@@ -316,16 +316,13 @@ if uploaded_file is not None:
             ALL_INTENT_OPTIONS = list(INTENT_TO_CAT.keys())
 
             POSICIONES = [
-                # Portería
                 ("POR","PORTERA"),
-                # Defensas/carrileras
                 ("LAD","LATERAL DERECHA"),
                 ("LVD","LATERAL VOLANTE DERECHA"),
                 ("DCD","DEFENSA CENTRAL DERECHA"),
                 ("DCI","DEFENSA CENTRAL IZQUIERDA"),
                 ("LAI","LATERAL IZQUIERDA"),
                 ("LVI","LATERAL VOLANTE IZQUIERDA"),
-                # Medios
                 ("MCC","MEDIOCAMPISTA CENTRAL"),
                 ("MCD","MEDIOCAMPISTA CENTRAL DEFENSIVA"),
                 ("MCO","MEDIOCAMPISTA CENTRAL OFENSIVA"),
@@ -333,14 +330,12 @@ if uploaded_file is not None:
                 ("MII","MEDIOCAMPISTA INTERIOR IZQUIERDA"),
                 ("MVD","MEDIA VOLANTE DERECHA"),
                 ("MVI","MEDIA VOLANTE IZQUIERDA"),
-                # Ataque
                 ("EXI","EXTREMA IZQUIERDA"),
                 ("EXD","EXTREMA DERECHA"),
                 ("MEP","MEDIA PUNTA"),
                 ("DEC","DELANTERA CENTRO"),
                 ("SED","SEGUNDA DELANTERA"),
                 ("FNU","FALSA NUEVE"),
-                # Otro
                 ("","(Sin especificar)")
             ]
             POS_OPTS = [p[0] for p in POSICIONES]
@@ -349,7 +344,7 @@ if uploaded_file is not None:
             base_now = df_subs_edit[["minuto","entra","sale","equipo"]].copy().sort_values(["minuto","entra","sale","equipo"])
             sig_now = "|".join(base_now.astype(str).agg("||".join, axis=1))
 
-            key_table = "tabla_anotaciones_v5"
+            key_table = "tabla_anotaciones_v7"
             key_sig   = "anot_sig"
 
             if key_table not in st.session_state or st.session_state.get(key_sig, "") != sig_now:
@@ -375,12 +370,21 @@ if uploaded_file is not None:
                     merged[col] = merged[col].fillna("")
                 st.session_state[key_table] = merged
 
-            # Editor con columnas en el orden solicitado
+            # >>> ORDEN EXACTO SOLICITADO (ocultando intencion_categoria y intencion_otro) <<<
             COLUMN_ORDER = [
-                "minuto","equipo","entra","pos_sale","sale","pos_entra",
-                "formacion_antes","formacion_despues","intencion_tactica",
-                # (guardamos pero no mostramos 'intencion_categoria' ni 'intencion_otro' al frente)
-                "intencion_categoria","intencion_otro"
+                "minuto",            # Minuto
+                "equipo",            # Equipo
+                "sale",              # Sale
+                "pos_sale",          # Sale Pos
+                "formacion_antes",   # Formación antes
+                "entra",             # Entra
+                "pos_entra",         # Entra Pos
+                # visibles después:
+                "formacion_despues",
+                "intencion_tactica",
+                # (ocultas en la vista, pero existen en el DF y se guardan en sesión)
+                # "intencion_categoria",
+                # "intencion_otro",
             ]
 
             edited = st.data_editor(
@@ -407,23 +411,15 @@ if uploaded_file is not None:
                         options=[""] + ALL_INTENT_OPTIONS + ["Otro"],
                         help="Elige la intención; la categoría se asigna en automático."
                     ),
-                    "intencion_categoria": st.column_config.TextColumn(
-                        "intencion_categoria",
-                        help="Se llena automáticamente según la intención.",
-                        disabled=True
-                    ),
-                    "intencion_otro": st.column_config.TextColumn(
-                        "Otro (especifica)", help="Se usa si elegiste 'Otro'."
-                    ),
+                    # NOTA: no exponemos 'intencion_categoria' ni 'intencion_otro' en la UI
                 },
                 column_order=COLUMN_ORDER
             )
 
-            # Autorrelleno de categoría según la intención
+            # Autorrelleno de categoría según la intención (aunque no se muestre)
             for idx, row in edited.iterrows():
                 intent = str(row.get("intencion_tactica","")).strip()
                 if intent == "Otro":
-                    # Si es "Otro", dejamos categoría como "Otro" solo para referencia
                     edited.at[idx, "intencion_categoria"] = "Otro"
                 elif intent in INTENT_TO_CAT:
                     edited.at[idx, "intencion_categoria"] = INTENT_TO_CAT[intent]
@@ -433,9 +429,8 @@ if uploaded_file is not None:
 
             st.session_state[key_table] = edited.copy()
             st.dataframe(
-                edited.sort_values(["minuto","equipo"]),
-                use_container_width=True, hide_index=True,
-                column_order=COLUMN_ORDER
+                edited.sort_values(["minuto","equipo"])[COLUMN_ORDER],
+                use_container_width=True, hide_index=True
             )
             df_subs_with_notes = edited.copy()
 
@@ -446,11 +441,7 @@ if uploaded_file is not None:
             c1,c2,c3 = st.columns(3)
             with c1:
                 st.write("**Sustituciones (base)**")
-                # mostramos solo un minuto (no duplicamos minuto_txt)
-                st.dataframe(
-                    df_subs[["sale","minuto"]].rename(columns={"minuto":"minuto"}),
-                    use_container_width=True, hide_index=True
-                )
+                st.dataframe(df_subs, use_container_width=True, hide_index=True)
             with c2:
                 st.write("**Goles (base)**")
                 st.dataframe(df_goles, use_container_width=True, hide_index=True)
@@ -496,7 +487,12 @@ if uploaded_file is not None:
             if my == opp: return 1
             return 0
 
-        score_series = build_score_series(df_goles_edit, my_team, opp_team)
+        # Usamos df_goles_edit (ya con equipos asignados)
+        try:
+            score_series = build_score_series(df_goles_edit, my_team, opp_team)
+        except Exception:
+            score_series = []
+
         my_final = opp_final = 0
         if score_series:
             my_final, opp_final = score_series[-1][1], score_series[-1][2]
@@ -532,13 +528,13 @@ if uploaded_file is not None:
                 else: etiqueta="IMPACTO (revisar)"
 
                 my_post=opp_post=0
-                for _,g in df_goles_edit.iterrows():
-                    gm=int(g["minuto"])
-                    if t < gm <= w_end:
-                        if g["equipo"]==my_team: my_post+=1
-                        elif g["equipo"]==opp_team: opp_post+=1
+                if 'df_goles_edit' in locals() and not df_goles_edit.empty:
+                    for _,g in df_goles_edit.iterrows():
+                        gm=int(g["minuto"])
+                        if t < gm <= w_end:
+                            if g["equipo"]==my_team: my_post+=1
+                            elif g["equipo"]==opp_team: opp_post+=1
 
-                # si intencion es "Otro", usar el texto libre
                 inten = row.get("intencion_tactica","")
                 if inten == "Otro":
                     inten = row.get("intencion_otro","Otro")
@@ -584,13 +580,12 @@ if uploaded_file is not None:
         st.divider()
         st.subheader("Gráfico de intenciones tácticas")
 
-        tabla_key = "tabla_anotaciones_v5"
+        tabla_key = "tabla_anotaciones_v7"
         if tabla_key not in st.session_state or st.session_state[tabla_key].empty:
             st.info("Primero captura intenciones tácticas en la tabla de 'Sustituciones + Anotaciones tácticas'.")
         else:
             df_notes = st.session_state[tabla_key].copy()
 
-            # Colores Pumas
             OBSIDIAN  = "#0F1A2B"
             CLUB_GOLD = "#E8BE83"
             PALETTE = [OBSIDIAN, CLUB_GOLD, "#1C2A40", "#F1D3A6", "#0B1322", "#D6A86A", "#24344F", "#C99758"]
@@ -630,14 +625,10 @@ if uploaded_file is not None:
                 colors = (PALETTE * ((len(labels)//len(PALETTE))+1))[:len(labels)]
 
                 c1, c2 = st.columns(2)
-
-                # Donut
                 with c1:
                     fig, ax = plt.subplots(figsize=(5.5, 5.5))
-                    wedges, _ = ax.pie(
-                        counts, labels=None, startangle=90, colors=colors,
-                        wedgeprops={"linewidth": 1, "edgecolor": "white"}
-                    )
+                    wedges, _ = ax.pie(counts, labels=None, startangle=90, colors=colors,
+                                       wedgeprops={"linewidth": 1, "edgecolor": "white"})
                     centre_circle = plt.Circle((0, 0), 0.60, fc="white")
                     fig.gca().add_artist(centre_circle)
                     ax.set_title(titulo, fontsize=12)
@@ -645,7 +636,6 @@ if uploaded_file is not None:
                               loc="center left", bbox_to_anchor=(1, 0.5))
                     st.pyplot(fig, clear_figure=True)
 
-                # Barra horizontal
                 with c2:
                     fig2, ax2 = plt.subplots(figsize=(6.5, 5.5))
                     y_pos = list(range(len(labels)))[::-1]
