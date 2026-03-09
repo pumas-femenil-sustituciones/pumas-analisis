@@ -308,7 +308,7 @@ const DATA = {
       { n:"Ilana Izquierdo",          p:"M", ent:4, impT:0,  impP:0.00,  rat:6.72, gs:"Ganando"   },
     ],
     xi: [
-      { n:"Aurora Santiago",             p:"G", pj:"7/10", rat:7.07, nota:"9x titular · en ascenso pronunciado (+0.87) · mejor momento del torneo" },
+      { n:"Cecilia Santiago",             p:"G", pj:"7/10", rat:7.07, nota:"9x titular · en ascenso pronunciado (+0.87) · mejor momento del torneo" },
       { n:"Ève Périsset",                p:"D", pj:"6/10", rat:6.60, nota:"6x titular · lateral izquierda titular en J6-J10" },
       { n:"Mariza",                      p:"D", pj:"9/10", rat:7.12, nota:"9x titular · fija en el eje defensivo · en ascenso (+0.42)" },
       { n:"Greta Espinoza",              p:"D", pj:"9/10", rat:6.96, nota:"9x titular · indiscutida en la zaga · mejor en J8-J10 (+0.78)" },
@@ -322,7 +322,7 @@ const DATA = {
     ],
     forma: [
       { n:"Diana Ordoñez",               p:"F", prev:8.12, ult:6.90, d:-1.22 },
-      { n:"Aurora Santiago",             p:"G", prev:6.68, ult:7.55, d:+0.87 },
+      { n:"Cecilia Santiago",             p:"G", prev:6.68, ult:7.55, d:+0.87 },
       { n:"Greta Espinoza",              p:"D", prev:6.59, ult:7.37, d:+0.78 },
       { n:"Emma Christine Linda Watson", p:"M", prev:6.63, ult:7.17, d:+0.53 },
       { n:"Alexia Delgado",              p:"M", prev:6.70, ult:7.13, d:+0.43 },
@@ -377,7 +377,7 @@ const DATA = {
     ],
     notasForma: [
       { tipo:"alerta", txt:"Diana Ordoñez (−1.22): la mejor del torneo en descenso pronunciado en las últimas 3 jornadas." },
-      { tipo:"info",   txt:"Aurora Santiago (+0.87) y Greta Espinoza (+0.78): la zaga llega en su mejor momento del torneo." },
+      { tipo:"info",   txt:"Cecilia Santiago (+0.87) y Greta Espinoza (+0.78): la zaga llega en su mejor momento del torneo." },
       { tipo:"info",   txt:"Thembi Kgatlana (+0.42): la más rotada del equipo llega con tendencia positiva." },
       { tipo:"alerta", txt:"Jheniffer Cordinali (−0.42): pieza de rotación en caída — puede quedar fuera del XI titular." },
       { tipo:"info",   txt:"Alexia Delgado: irregular en J6-J8 tras su regreso (5.70 en J8), rebotó a 8.50 en J9." },
