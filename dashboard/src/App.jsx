@@ -109,6 +109,32 @@ const DATA = {
       "Valeria Martínez en mejor momento del torneo (+0.67 en últimas 3J).",
       "Jakobsson: irrumpe en J9-J10 con 7.85 — mayor incertidumbre táctica.",
     ],
+    notasSubs: [
+      { tipo:"info", txt:"48% de los cambios ocurren en la franja 46-60' — los más tempranos de la liga analizada." },
+      { tipo:"info", txt:"Lair hace dobles o triples cambios simultáneos al descanso cuando el marcador está igualado." },
+      { tipo:"alerta", txt:"Ganando en cualquier tipo: impacto +0.00. El banco de Toluca conserva ventajas, no las amplía." },
+    ],
+    notasGoles: [
+      { tipo:"alerta", txt:"Franja 31-45': Pumas anota 6 GF · Toluca recibe 5 GC — el cruce más relevante del análisis." },
+      { tipo:"alerta", txt:"Franja 76-90': Toluca explota (7 GF) y Pumas recibe más (4 GC) — tramo de mayor peligro." },
+      { tipo:"info", txt:"Toluca concedió solo 1 gol en la franja 46-75' — 30 minutos casi impermeables." },
+      { tipo:"info", txt:"32% de los goles de Toluca llegan en los últimos 15 minutos." },
+    ],
+    notasLV: [
+      { tipo:"info", txt:"Toluca rinde MEJOR de visita (2.25 pts/PJ) que de local (2.17 pts/PJ) — patrón inusual." },
+      { tipo:"info", txt:"De visita empatando: +2.00 impacto promedio por cambio — su combinación más efectiva del torneo." },
+      { tipo:"info", txt:"De local el banco es menos efectivo (+0.70 empatando). Los partidos en casa los resuelve el XI." },
+      { tipo:"alerta", txt:"El partido contra Pumas es de LOCAL para Toluca. Lair viene al estadio Nemesio Díez a ganar desde el arranque." },
+    ],
+    notasBanco: [
+      { tipo:"info", txt:"Cinthya Peraza y Itzel Muñoz rinden mejor de suplentes que de titulares." },
+      { tipo:"info", txt:"Yaneisy Rodríguez sale empatando 3/5 veces — cuando sale, entra siempre un perfil ofensivo." },
+    ],
+    notasForma: [
+      { tipo:"alerta", txt:"Le Sommer (−0.88) y Peraza (−0.45): las dos principales amenazas llegan en descenso." },
+      { tipo:"alerta", txt:"Amandine Henry (−0.53): el pivote inamovible en su peor racha del torneo." },
+      { tipo:"info", txt:"Valeria Martínez (+0.67): portera en mejor momento. Jakobsson (7.85): irrupción sin historial previo." },
+    ],
   },
 
   // ── TIJUANA — datos reales CL26 J1-J10 ───────────────────────
@@ -203,11 +229,164 @@ const DATA = {
       "PERDIENDO: llega tarde (mediana min 77) · solo convierte 4 de 16 cambios en victoria.",
       "GANANDO: cuando saca a Borgella/Hançar y mete a Quintos, el equipo queda vulnerable al contraataque.",
     ],
+    notasSubs: [
+      { tipo:"info", txt:"49% de los cambios ocurren en los últimos 15 minutos — Samayoa es el DT más tardío analizado." },
+      { tipo:"info", txt:"Solo 1 cambio ofensivo en 10 partidos — el planteamiento no cambia con el marcador en contra." },
+      { tipo:"alerta", txt:"GANANDO hace cambios con impacto negativo (−0.47): saca a sus mejores y mete a Quintos/Hernández." },
+    ],
+    notasGoles: [
+      { tipo:"alerta", txt:"Franja 31-45': Pumas anota 6 GF — Tijuana recibe 3 GC en ese mismo tramo." },
+      { tipo:"alerta", txt:"Franja 76-90': Tijuana anota 4 GF pero también recibe 3 GC — tramo de mayor intercambio." },
+      { tipo:"info", txt:"Distribución ofensiva equilibrada: ninguna franja concentra más del 20% de sus goles." },
+      { tipo:"info", txt:"Tijuana recibe más de visita (9 GC en 5 partidos) que de local (7 GC en 5 partidos)." },
+    ],
+    notasLV: [
+      { tipo:"info", txt:"De local: 2V 2E 1D — su rendimiento más sólido del torneo (1.60 pts/PJ)." },
+      { tipo:"info", txt:"De visita llega PERDIENDO en el 52% de los minutos — la mayor vulnerabilidad táctica de Samayoa." },
+      { tipo:"alerta", txt:"El partido contra Pumas es de VISITA para Tijuana — contexto en el que más sufre." },
+      { tipo:"alerta", txt:"De visita nunca ha llegado EMPATANDO más del 17% del tiempo — casi no gestiona marcadores igualados fuera de casa." },
+    ],
+    notasBanco: [
+      { tipo:"info", txt:"Roselord Borgella es la única carta real del banco para buscar ganar: 1.67 imp prom entrando empatando." },
+      { tipo:"alerta", txt:"Inglis Hernández y Bibiana Quintos acumulan −0.40 de impacto cada una — entran cuando el partido ya está perdido." },
+    ],
+    notasForma: [
+      { tipo:"info", txt:"Kader Hançar en su mejor momento del torneo (+0.33) — la amenaza más en forma del equipo." },
+      { tipo:"info", txt:"Jazmín Enrigue en ascenso (+0.42) — la defensora que más ha mejorado en las últimas 3 jornadas." },
+      { tipo:"alerta", txt:"Deisy Ojeda en caída (−0.77): segunda mejor del equipo pero en su peor racha del torneo." },
+      { tipo:"alerta", txt:"Laura Parra en descenso (−0.53) — su lugar en el XI podría estar en disputa." },
+    ],
+  },
+
+  "Tigres UANL": {
+    torneo: "Clausura 2026 · J1–J10",
+    status: "real",
+    dt: "Pedro Martínez Losa",
+    record: { G:6, E:3, P:1, pts:21, pj:10, gf:22, gc:9 },
+    local:  { G:3, E:0, P:1, pts:9,  pj:4,  gf:11, gc:4 },
+    visita: { G:3, E:3, P:0, pts:12, pj:6,  gf:11, gc:5 },
+    primeGol: { favor:"pendiente", contra:"pendiente" },
+    subsPorPartido: 4.7,
+    formaciones: [
+      { form:"1-4-2-3-1", pj:3, v:3, e:0, d:1, pts:9,  gf:11, gc:5,  contexto:"Formación más usada (J1,J5,J10) · variante ofensiva" },
+      { form:"1-4-1-4-1", pj:3, v:1, e:2, d:0, pts:5,  gf:3,  gc:3,  contexto:"Control y equilibrio ante rivales exigentes" },
+      { form:"1-4-1-3-2", pj:2, v:2, e:0, d:0, pts:6,  gf:8,  gc:3,  contexto:"La más efectiva · 2V 0D en J7-J8" },
+    ],
+    gamestates: {
+      global: { gan:38.6, emp:43.7, per:17.8 },
+      local:  { gan:48.1, emp:23.1, per:28.9 },
+      visita: { gan:32.2, emp:57.4, per:10.4 },
+    },
+    franjasSubs: [
+      { franja:"1-30'",  n:1,  imp:3.00  },
+      { franja:"31-45'", n:6,  imp:0.00  },
+      { franja:"46-60'", n:11, imp:0.55  },
+      { franja:"61-75'", n:13, imp:0.62  },
+      { franja:"76-90'", n:16, imp:0.19  },
+    ],
+    heatmap: [
+      { tipo:"Ofensivo",  gan:{n:0,imp:0.00},  emp:{n:1,imp:0.00},  per:{n:2,imp:0.50} },
+      { tipo:"Medio",     gan:{n:19,imp:0.00}, emp:{n:10,imp:0.60}, per:{n:9,imp:0.78} },
+      { tipo:"Defensivo", gan:{n:3,imp:0.00},  emp:{n:3,imp:2.00},  per:{n:0,imp:0.00} },
+    ],
+    franjasGoles: [
+      { f:"1-15'",  gf:3, gc:1 },
+      { f:"16-30'", gf:1, gc:3 },
+      { f:"31-45'", gf:6, gc:1 },
+      { f:"46-60'", gf:0, gc:2 },
+      { f:"61-75'", gf:4, gc:1 },
+      { f:"76-90'", gf:8, gc:1 },
+    ],
+    banco: [
+      { n:"Maria Gonzalez",           p:"D", ent:5, impT:5,  impP:1.00,  rat:6.84, gs:"Empatando" },
+      { n:"Andrea Hernández",         p:"M", ent:5, impT:4,  impP:0.80,  rat:6.75, gs:"Perdiendo" },
+      { n:"Mia Villalpando",          p:"D", ent:4, impT:4,  impP:1.00,  rat:6.58, gs:"Empatando" },
+      { n:"Ève Périsset",             p:"D", ent:3, impT:2,  impP:0.67,  rat:6.69, gs:"Ganando"   },
+      { n:"Natalia J. Colin",         p:"D", ent:4, impT:2,  impP:0.50,  rat:6.80, gs:"Ganando"   },
+      { n:"Tatiana Flores",           p:"F", ent:2, impT:1,  impP:0.50,  rat:6.85, gs:"Perdiendo" },
+      { n:"Jheniffer Cordinali",      p:"M", ent:3, impT:1,  impP:0.33,  rat:6.98, gs:"Perdiendo" },
+      { n:"Ilana Izquierdo",          p:"M", ent:4, impT:0,  impP:0.00,  rat:6.72, gs:"Ganando"   },
+    ],
+    xi: [
+      { n:"Aurora Santiago",             p:"G", pj:"7/10", rat:7.07, nota:"9x titular · en ascenso pronunciado (+0.87) · mejor momento del torneo" },
+      { n:"Ève Périsset",                p:"D", pj:"6/10", rat:6.60, nota:"6x titular · lateral izquierda titular en J6-J10" },
+      { n:"Mariza",                      p:"D", pj:"9/10", rat:7.12, nota:"9x titular · fija en el eje defensivo · en ascenso (+0.42)" },
+      { n:"Greta Espinoza",              p:"D", pj:"9/10", rat:6.96, nota:"9x titular · indiscutida en la zaga · mejor en J8-J10 (+0.78)" },
+      { n:"Myra Delgadillo",             p:"M", pj:"9/10", rat:6.86, nota:"9x titular · pieza inamovible del mediocampo · muy estable" },
+      { n:"Alexia Delgado",              p:"M", pj:"7/10", rat:6.89, nota:"7x titular · ausente J3-J5 · rebotó a 8.50 en J9 tras jornadas irregulares" },
+      { n:"Jennifer Hermoso",            p:"M", pj:"7/10", rat:7.20, nota:"7x titular · disponibilidad limitada · equipo más productivo cuando juega" },
+      { n:"Thembi Kgatlana",             p:"M", pj:"8/10", rat:7.67, nota:"8x titular · segunda mejor del torneo · en ascenso (+0.42) · sale 7x" },
+      { n:"Emma Christine Linda Watson", p:"M", pj:"6/10", rat:6.90, nota:"6x titular · emergente en J6-J10 · en ascenso (+0.53)" },
+      { n:"Jheniffer Cordinali",         p:"M", pj:"6/10", rat:7.13, nota:"6x titular · rota entre titular y banca · en caída (−0.42)" },
+      { n:"Diana Ordoñez",               p:"F", pj:"8/10", rat:7.85, nota:"8x titular · ⭐ mejor del torneo · llega en caída severa (−1.22)" },
+    ],
+    forma: [
+      { n:"Diana Ordoñez",               p:"F", prev:8.12, ult:6.90, d:-1.22 },
+      { n:"Aurora Santiago",             p:"G", prev:6.68, ult:7.55, d:+0.87 },
+      { n:"Greta Espinoza",              p:"D", prev:6.59, ult:7.37, d:+0.78 },
+      { n:"Emma Christine Linda Watson", p:"M", prev:6.63, ult:7.17, d:+0.53 },
+      { n:"Alexia Delgado",              p:"M", prev:6.70, ult:7.13, d:+0.43 },
+      { n:"Thembi Kgatlana",             p:"M", prev:7.38, ult:7.80, d:+0.42 },
+      { n:"Mariza",                      p:"D", prev:6.98, ult:7.40, d:+0.42 },
+      { n:"Mia Villalpando",             p:"D", prev:6.49, ult:6.90, d:+0.41 },
+      { n:"Jheniffer Cordinali",         p:"M", prev:7.07, ult:6.65, d:-0.42 },
+      { n:"Jennifer Hermoso",            p:"M", prev:7.28, ult:7.00, d:-0.28 },
+      { n:"Natalia J. Colin",            p:"D", prev:6.88, ult:6.55, d:-0.33 },
+      { n:"Myra Delgadillo",             p:"M", prev:6.81, ult:6.83, d:+0.02 },
+    ],
+    alertas: [
+      "Diana Ordoñez (7.85 avg titular) llega en caída severa: −1.22 en las últimas 3 jornadas.",
+      "Pedro Martínez rota 4 jugadoras por partido en promedio — no hay un XI consolidado hasta J6.",
+      "Defensivo empatando: +2.00 imp — la jugada más efectiva del banco pero la usa solo 3 veces en 10 partidos.",
+      "Solo 6% de sus cambios son ofensivos — casi nunca apuesta por atacar desde el banco.",
+    ],
+    hallazgos: [
+      "XI más habitual consolidado recién en J6-J8 (10/11 jugadoras tipo), con rotaciones masivas en J1-J5.",
+      "51% de los cambios son simultáneos o casi (brecha ≤5 min) — Pedro Martínez opera en tandas, no escalonado.",
+      "81% de sus cambios son Medio — sustituye el mismo perfil posicional sin redefinir el planteamiento.",
+      "De visita el equipo pasa el 57% del tiempo empatando — el gamestate que activa sus mejores movimientos de banco.",
+      "Thembi Kgatlana: la más rotada (sale 7x) y llega a J8-J10 en su mejor momento del torneo (+0.42).",
+      "Franja 76-90': 8 GF y solo 1 GC — el tramo más dominante del torneo.",
+      "Franja 46-60': 0 goles a favor y 2 en contra — apertura del segundo tiempo como zona vulnerable.",
+      "Ausencia de Alexia Delgado (J3-J5): los resultados no cayeron, pero Pedro usó hasta 7 cambios en el XI para cubrirla.",
+      "Maria Gonzalez y Mia Villalpando: mejor dupla del banco (+1.00 imp cada una), ambas entran empatando.",
+      "De local pierde el 28% de los minutos jugados — más vulnerable en casa que de visita.",
+    ],
+    notasSubs: [
+      { tipo:"info",   txt:"Pedro Martínez opera en tandas simultáneas: el 51% de sus cambios se dan en pares o tríos al mismo minuto." },
+      { tipo:"info",   txt:"GANANDO hace cambios Medio o Defensivo en el 100% de los casos — consolida sin apostar." },
+      { tipo:"alerta", txt:"6 cambios al descanso (31-45') con impacto 0 — los ajustes del medio tiempo no mueven el marcador." },
+      { tipo:"alerta", txt:"Mediana de primera sustitución GANANDO: min 78. EMPATANDO: min 58 — reacciona 20 minutos antes cuando necesita." },
+    ],
+    notasGoles: [
+      { tipo:"alerta", txt:"Franja 46-60': 0 goles a favor y 2 en contra — el inicio del segundo tiempo es la ventana de mayor riesgo." },
+      { tipo:"info",   txt:"Franja 76-90': 8 GF y solo 1 GC — Tigres cierra partidos de forma contundente." },
+      { tipo:"info",   txt:"Franja 31-45': 6 GF y 1 GC — el mejor tramo ofensivo del equipo en el torneo." },
+      { tipo:"alerta", txt:"Franja 16-30': 1 GF y 3 GC — arranque de partido como zona de mayor vulnerabilidad defensiva." },
+    ],
+    notasLV: [
+      { tipo:"info",   txt:"De visita: 3V 3E 0D — el equipo invicto fuera de casa en 10 jornadas." },
+      { tipo:"info",   txt:"De visita pasa el 57% del tiempo empatando — los cambios en ese gamestate son la clave táctica." },
+      { tipo:"alerta", txt:"De local: 28% de los minutos en desventaja — el equipo es más vulnerable en casa que de visita." },
+      { tipo:"alerta", txt:"Santos visita el estadio Universitario — Tigres recibe en condición de local." },
+    ],
+    notasBanco: [
+      { tipo:"info",   txt:"Maria Gonzalez y Mia Villalpando: mejor dupla del banco con +1.00 imp promedio cada una, ambas entran empatando." },
+      { tipo:"info",   txt:"Andrea Hernández: la carta más activa para remontar — entra perdiendo con +0.80 imp promedio." },
+      { tipo:"alerta", txt:"Defensivo empatando (+2.00 imp): la jugada más efectiva del banco, pero Pedro la usa con cuentagotas." },
+    ],
+    notasForma: [
+      { tipo:"alerta", txt:"Diana Ordoñez (−1.22): la mejor del torneo en descenso pronunciado en las últimas 3 jornadas." },
+      { tipo:"info",   txt:"Aurora Santiago (+0.87) y Greta Espinoza (+0.78): la zaga llega en su mejor momento del torneo." },
+      { tipo:"info",   txt:"Thembi Kgatlana (+0.42): la más rotada del equipo llega con tendencia positiva." },
+      { tipo:"alerta", txt:"Jheniffer Cordinali (−0.42): pieza de rotación en caída — puede quedar fuera del XI titular." },
+      { tipo:"info",   txt:"Alexia Delgado: irregular en J6-J8 tras su regreso (5.70 en J8), rebotó a 8.50 en J9." },
+    ],
   },
 
   // ── RESTO DE EQUIPOS (arquitectura lista, datos pendientes) ──────────
   ...[
-    "Tigres UANL","Chivas","América","Pumas UNAM","Monterrey",
+    "Chivas","América","Pumas UNAM","Monterrey",
     "Atlas","Pachuca","Santos Laguna","Necaxa","FC Juárez",
     "Querétaro","Atlético de San Luis","Cruz Azul",
     "Puebla FC","Mazatlán","León"
@@ -480,9 +659,10 @@ function SecSubs({ d }) {
       </div>
 
       <div style={{ marginTop:14 }}>
-        <Info>48% de los cambios ocurren en la franja 46-60' — los más tempranos de la liga analizada.</Info>
-        <Info>Lair hace dobles o triples cambios simultáneos al descanso cuando el marcador está igualado.</Info>
-        <Alert>Ganando en cualquier tipo: impacto +0.00. El banco de Toluca conserva ventajas, no las amplía.</Alert>
+        {d.notasSubs?.map((n,i) => n.tipo==="alerta"
+          ? <Alert key={i}>{n.txt}</Alert>
+          : <Info key={i}>{n.txt}</Info>
+        )}
       </div>
     </>
   );
@@ -550,10 +730,10 @@ function SecGoles({ d }) {
       )}
 
       <div style={{ marginTop:14 }}>
-        <Alert>Franja 31-45': Pumas anota 6 GF · Toluca recibe 5 GC — el cruce más relevante del análisis.</Alert>
-        <Alert>Franja 76-90': Toluca explota (7 GF) y Pumas recibe más (4 GC) — tramo de mayor peligro.</Alert>
-        <Info>Toluca concedió solo 1 gol en la franja 46-75' — 30 minutos casi impermeables.</Info>
-        <Info>32% de los goles de Toluca llegan en los últimos 15 minutos.</Info>
+        {d.notasGoles?.map((n,i) => n.tipo==="alerta"
+          ? <Alert key={i}>{n.txt}</Alert>
+          : <Info key={i}>{n.txt}</Info>
+        )}
       </div>
     </>
   );
@@ -615,10 +795,10 @@ function SecLocalVisita({ d }) {
       </div>
 
       <div style={{ marginTop:14 }}>
-        <Info>Toluca rinde MEJOR de visita (2.25 pts/PJ) que de local (2.17 pts/PJ) — patrón inusual.</Info>
-        <Info>De visita empatando: +2.00 impacto promedio por cambio — su combinación más efectiva del torneo.</Info>
-        <Info>De local el banco es menos efectivo (+0.70 empatando). Los partidos en casa los resuelve el XI.</Info>
-        <Alert>El partido contra Pumas es de LOCAL para Toluca. Lair viene al estadio Nemesio Díez a ganar desde el arranque.</Alert>
+        {d.notasLV?.map((n,i) => n.tipo==="alerta"
+          ? <Alert key={i}>{n.txt}</Alert>
+          : <Info key={i}>{n.txt}</Info>
+        )}
       </div>
     </>
   );
@@ -670,8 +850,10 @@ function SecBanco({ d }) {
         ))}
       </div>
       <div style={{ marginTop:12 }}>
-        <Info>Cinthya Peraza y Itzel Muñoz rinden mejor de suplentes que de titulares.</Info>
-        <Info>Yaneisy Rodríguez sale empatando 3/5 veces — cuando sale, entra siempre un perfil ofensivo.</Info>
+        {d.notasBanco?.map((n,i) => n.tipo==="alerta"
+          ? <Alert key={i}>{n.txt}</Alert>
+          : <Info key={i}>{n.txt}</Info>
+        )}
       </div>
     </>
   );
@@ -731,9 +913,10 @@ function SecForma({ d }) {
         ))}
       </div>
       <div style={{ marginTop:12 }}>
-        <Alert>Le Sommer (−0.88) y Peraza (−0.45): las dos principales amenazas llegan en descenso.</Alert>
-        <Alert>Amandine Henry (−0.53): el pivote inamovible en su peor racha del torneo.</Alert>
-        <Info>Valeria Martínez (+0.67): portera en mejor momento. Jakobsson (7.85): irrupción sin historial previo.</Info>
+        {d.notasForma?.map((n,i) => n.tipo==="alerta"
+          ? <Alert key={i}>{n.txt}</Alert>
+          : <Info key={i}>{n.txt}</Info>
+        )}
       </div>
     </>
   );
