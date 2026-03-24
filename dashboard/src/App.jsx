@@ -630,7 +630,7 @@ const DATA = {
     "Chivas","América","Monterrey",
     "Atlas","Pachuca","Santos Laguna","Necaxa","FC Juárez",
     "Querétaro","Atlético de San Luis","Cruz Azul",
-    "Puebla FC","Mazatlán","Tijuana"
+    "Puebla FC","Mazatlán FC","Xolas"
   ].reduce((acc, eq) => {
     acc[eq] = {
       torneo: "Clausura 2026",
