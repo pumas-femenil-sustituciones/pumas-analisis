@@ -1,4 +1,4 @@
-impor
+import
   "Pumas UNAM": {
     torneo: "Clausura 2026 · J1–J13",
     status: "real",
