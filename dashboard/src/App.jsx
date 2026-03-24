@@ -1,4 +1,248 @@
-import { useState, useRef } from "react";
+impor
+  "Pumas UNAM": {
+    torneo: "Clausura 2026 · J1–J13",
+    status: "real",
+    record: { G:4, E:3, P:6, pts:15, pj:13, gf:14, gc:21 },
+    local:  { G:3, E:0, P:2, pts:9,  pj:5,  gf:6,  gc:4  },
+    visita: { G:1, E:3, P:4, pts:6,  pj:8,  gf:8,  gc:17 },
+    primeGol: { favor:"4V 1E 1D (anota 40')", contra:"0V 1E 5D (recibe 14')" },
+    minPGF: 40, minPGC: 14,
+    subsPorPartido: 4.4,
+    formaciones: [
+      { form:"1-4-2-3-1", pj:7, v:3, e:1, d:3, pts:10, gf:8,  gc:9,  contexto:"Formación base · 1.43 pts/PJ" },
+      { form:"1-4-4-2",   pj:5, v:1, e:1, d:3, pts:4,  gf:6,  gc:12, contexto:"Doble punta · 0.80 pts/PJ · peor rendimiento" },
+    ],
+    gamestates: {
+      global: { gan:23.3, emp:43.0, per:33.7 },
+      local:  { gan:37.8, emp:36.7, per:25.6 },
+      visita: { gan:14.3, emp:46.9, per:38.8 },
+    },
+    franjasSubs: [
+      { franja:"1-30'",  n:1,  imp:0.00  },
+      { franja:"31-45'", n:0,  imp:0.00  },
+      { franja:"46-60'", n:11, imp:0.00  },
+      { franja:"61-75'", n:28, imp:0.11  },
+      { franja:"76-90'", n:17, imp:-0.18 },
+    ],
+    heatmap: [
+      { tipo:"Ofensivo",  gan:{n:2,imp:0.00},  emp:{n:0,imp:0.00},  per:{n:1,imp:0.00}  },
+      { tipo:"Medio",     gan:{n:17,imp:-0.53}, emp:{n:7,imp:0.00},  per:{n:24,imp:0.17} },
+      { tipo:"Defensivo", gan:{n:1,imp:0.00},  emp:{n:2,imp:2.00},  per:{n:3,imp:0.33}  },
+    ],
+    franjasGoles: [
+      { f:"1-15'",  gf:0, gc:4, pumGF:0, pumGC:4 },
+      { f:"16-30'", gf:4, gc:2, pumGF:4, pumGC:2 },
+      { f:"31-45'", gf:6, gc:3, pumGF:6, pumGC:3 },
+      { f:"46-60'", gf:1, gc:2, pumGF:1, pumGC:2 },
+      { f:"61-75'", gf:2, gc:4, pumGF:2, pumGC:4 },
+      { f:"76-90'", gf:1, gc:6, pumGF:1, pumGC:6 },
+    ],
+    banco: [
+      { n:"Paola Chavero",         p:"D", ent:1,  impT:2,  impP:2.00, rat:6.70, gs:"Empatando" },
+      { n:"Ximena Ríos",           p:"D", ent:1,  impT:2,  impP:2.00, rat:6.40, gs:"Empatando" },
+      { n:"Wendy Bonilla",         p:"M", ent:6,  impT:2,  impP:0.33, rat:6.70, gs:"Perdiendo" },
+      { n:"Ana Mendoza",           p:"D", ent:2,  impT:1,  impP:0.50, rat:6.50, gs:"Perdiendo" },
+      { n:"Karen Becerril",        p:"M", ent:5,  impT:1,  impP:0.20, rat:6.47, gs:"Ganando"   },
+      { n:"Alejandra Guerrero",    p:"M", ent:6,  impT:1,  impP:0.17, rat:7.02, gs:"Perdiendo" },
+      { n:"Alexa Huerta",          p:"M", ent:5,  impT:0,  impP:0.00, rat:6.55, gs:"Empatando" },
+    ],
+    xi: [
+      { n:"Jashia López / Heidi González", p:"G", pj:"4/4",  rat:7.07, nota:"Portería compartida · Jashia en caída (-0.53) últimas 4J" },
+      { n:"Karen Ramírez",                 p:"D", pj:"9/13", rat:6.52, nota:"Lateral fija · en caída (-0.28)" },
+      { n:"Julissa Dávila",                p:"D", pj:"8/13", rat:6.90, nota:"En caída (-0.40) últimas 4J" },
+      { n:"Paola Chavero Álvarez",         p:"D", pj:"8/13", rat:6.74, nota:"En caída (-0.16) · más estable que el resto" },
+      { n:"Alejandra Guerrero",            p:"M", pj:"5/13", rat:6.87, nota:"⚑ MC jugando como LI · caída severa (-0.80)" },
+      { n:"Alexa Huerta",                  p:"M", pj:"6/13", rat:6.88, nota:"⭐ Única en ascenso (+0.60) · mejor momento del torneo" },
+      { n:"Silvana Flores Dorrel",         p:"M", pj:"7/13", rat:6.95, nota:"Estable (-0.03) · la más consistente del mediocampo" },
+      { n:"Cristina Torres",               p:"M", pj:"7/13", rat:7.21, nota:"Mejor del equipo · leve caída (-0.28) en tramo final" },
+      { n:"Angelina Nicole Hix",           p:"F", pj:"7/13", rat:7.53, nota:"Segunda mejor · en caída (-0.20)" },
+      { n:"Nayely Bolaños",                p:"F", pj:"7/13", rat:7.04, nota:"En caída (-0.25) · referente ofensiva" },
+      { n:"Dorian Hernández",              p:"F", pj:"4/13", rat:7.10, nota:"En caída (-0.52) · pierde continuidad" },
+    ],
+    forma: [
+      { n:"Alejandra Guerrero",    p:"M", prev:6.87, ult:6.07, d:-0.80 },
+      { n:"Jashia López",          p:"G", prev:7.33, ult:6.80, d:-0.53 },
+      { n:"Dorian Hernández",      p:"F", prev:7.37, ult:6.85, d:-0.52 },
+      { n:"Wendy Toledo",          p:"M", prev:7.30, ult:6.87, d:-0.43 },
+      { n:"Julissa Dávila",        p:"D", prev:6.97, ult:6.57, d:-0.40 },
+      { n:"Celia Gaynor",          p:"D", prev:6.60, ult:6.20, d:-0.40 },
+      { n:"Wendy Bonilla",         p:"M", prev:7.00, ult:6.70, d:-0.30 },
+      { n:"Cristina Torres",       p:"M", prev:7.28, ult:7.00, d:-0.28 },
+      { n:"Karen Ramírez",         p:"D", prev:6.58, ult:6.30, d:-0.28 },
+      { n:"Nayely Bolaños",        p:"F", prev:7.10, ult:6.85, d:-0.25 },
+      { n:"Angelina Hix",          p:"F", prev:7.63, ult:7.43, d:-0.20 },
+      { n:"Paola Chavero",         p:"D", prev:6.76, ult:6.60, d:-0.16 },
+      { n:"Silvana F. Dorrel",     p:"M", prev:6.97, ult:6.93, d:-0.03 },
+      { n:"Karen Becerril",        p:"M", prev:6.30, ult:6.50, d:+0.20 },
+      { n:"Alexa Huerta",          p:"M", prev:6.80, ult:7.40, d:+0.60 },
+    ],
+    alertas: [
+      "Recibe primero (6PJ): 0V 1E 5D — cuando el rival marca primero Pumas casi nunca reacciona.",
+      "De visita juega PERDIENDO el 38.8% del tiempo · GC:17 en 8 partidos — muy permeable fuera de casa.",
+      "Franja 76-90': solo 1 GF y 6 GC — el tramo final es donde más daño recibe el equipo.",
+    ],
+    hallazgos: [
+      "Alejandra Guerrero: MC jugando como LI · caída severa (-0.80) en las últimas 4J — la posición forzada tiene costo.",
+      "1-4-4-2 es un problema: 0.80 pts/PJ vs 1.43 con 1-4-2-3-1 — el cambio de sistema coincide con las rachas negativas.",
+      "Alexa Huerta: única jugadora en ascenso en el tramo final (+0.60) — la excepción positiva del equipo.",
+      "GANANDO el banco tiene impacto muy negativo (-0.53 Medio) — los cambios de consolidación cuestan partidos.",
+      "Defensivo empatando: +2.00 imp (2 usos) — sigue siendo la jugada más efectiva del banco pero muy poco usada.",
+      "El primer gol decide: anota primero 4V 1E 1D, recibe primero 0V 1E 5D — patrón más determinístico que nunca.",
+      "Franja 1-15': 0 GF y 4 GC en 13 PJ — los primeros 15 minutos son zona de riesgo crítico.",
+      "Medio empatando cayó de +1.33 a +0.00 con las nuevas jornadas — el banco ya no convierte empates en victorias.",
+    ],
+    notasSubs: [
+      { tipo:"info",   txt:"El 49% de los cambios ocurren en la franja 61-75' — la DT actúa tarde y en el tramo central del 2T." },
+      { tipo:"alerta", txt:"GANANDO hace cambios Medio con impacto -0.53 — los cambios de consolidación están costando resultados." },
+      { tipo:"alerta", txt:"Medio empatando: +0.00 imp en J1-J13 — el banco ya no genera victorias desde el empate." },
+    ],
+    notasGoles: [
+      { tipo:"alerta", txt:"Franja 1-15': 0 GF y 4 GC — los primeros 15 minutos son la ventana de mayor vulnerabilidad." },
+      { tipo:"alerta", txt:"Franja 76-90': 1 GF y 6 GC — el equipo se desarma en los minutos finales." },
+      { tipo:"info",   txt:"El 71% de los goles de Pumas ocurren antes del minuto 45 — equipo de primera mitad." },
+    ],
+    notasLV: [
+      { tipo:"info",   txt:"De local: 3V 0E 2D con GC:4 en 5 PJ — la casa sigue siendo el refugio del equipo." },
+      { tipo:"alerta", txt:"De visita: 1V 3E 4D con GC:17 en 8 PJ — el equipo concede más de 2 goles por partido fuera." },
+      { tipo:"alerta", txt:"De visita el 38.8% del tiempo se juega perdiendo — la peor condición táctica del equipo." },
+    ],
+    notasBanco: [
+      { tipo:"info",   txt:"Paola Chavero y Ximena Ríos: +2.00 imp empatando — siguen siendo las cartas más efectivas del banco." },
+      { tipo:"alerta", txt:"Wendy Bonilla bajó de +1.00 a +0.33 imp/entrada — su efectividad cayó con las nuevas jornadas." },
+      { tipo:"alerta", txt:"Alexa Huerta: 5 entradas con impacto 0 — alto rating como suplente pero sin efecto en el marcador." },
+    ],
+    notasForma: [
+      { tipo:"alerta", txt:"Alejandra Guerrero (-0.80): la caída más pronunciada del equipo · MC jugando como LI." },
+      { tipo:"alerta", txt:"Jashia López (-0.53) y Dorian Hernández (-0.52): portería y ataque en caída simultánea." },
+      { tipo:"info",   txt:"Alexa Huerta (+0.60): la única jugadora del plantel en ascenso pronunciado en el tramo final." },
+      { tipo:"alerta", txt:"Cristina Torres (-0.28): la mejor del torneo también pierde nivel en las últimas 4 jornadas." },
+    ],
+  },
+
+  "León": {
+    torneo: "Clausura 2026 · J1–J13",
+    status: "real",
+    record: { G:4, E:3, P:6, pts:15, pj:13, gf:23, gc:23 },
+    local:  { G:3, E:2, P:2, pts:11, pj:7,  gf:16, gc:11 },
+    visita: { G:1, E:1, P:4, pts:4,  pj:6,  gf:7,  gc:12 },
+    primeGol: { favor:"4V 2E 1D (anota 34')", contra:"0V 0E 5D (recibe 11')" },
+    minPGF: 34, minPGC: 11,
+    subsPorPartido: 4.8,
+    formaciones: [
+      { form:"1-4-4-2",   pj:4, v:2, e:1, d:1, pts:7,  gf:9,  gc:6,  contexto:"Mejor resultado · única victoria de visita con esta formación" },
+      { form:"1-4-2-3-1", pj:3, v:1, e:1, d:1, pts:4,  gf:7,  gc:3,  contexto:"Alternativa ofensiva de local" },
+      { form:"1-4-3-3",   pj:2, v:0, e:0, d:2, pts:0,  gf:3,  gc:6,  contexto:"Solo de visita · 0V 0E 2D" },
+      { form:"1-4-1-3-2", pj:1, v:1, e:0, d:0, pts:3,  gf:3,  gc:1,  contexto:"Local vs Necaxa · el mejor resultado" },
+    ],
+    gamestates: {
+      global: { gan:26.2, emp:38.5, per:35.2 },
+      local:  { gan:38.6, emp:34.8, per:26.7 },
+      visita: { gan:11.9, emp:43.0, per:45.2 },
+    },
+    franjasSubs: [
+      { franja:"1-30'",  n:2,  imp:-1.50 },
+      { franja:"31-45'", n:3,  imp:0.00  },
+      { franja:"46-60'", n:10, imp:0.00  },
+      { franja:"61-75'", n:22, imp:-0.05 },
+      { franja:"76-90'", n:25, imp:0.00  },
+    ],
+    heatmap: [
+      { tipo:"Ofensivo",  gan:{n:2,imp:0.00},  emp:{n:3,imp:0.00},  per:{n:6,imp:0.00}  },
+      { tipo:"Medio",     gan:{n:15,imp:-0.20}, emp:{n:12,imp:-0.08}, per:{n:21,imp:0.00} },
+      { tipo:"Defensivo", gan:{n:2,imp:0.00},  emp:{n:0,imp:0.00},  per:{n:1,imp:0.00}  },
+    ],
+    franjasGoles: [
+      { f:"1-15'",  gf:2, gc:4, pumGF:0, pumGC:4 },
+      { f:"16-30'", gf:2, gc:3, pumGF:4, pumGC:2 },
+      { f:"31-45'", gf:4, gc:2, pumGF:6, pumGC:3 },
+      { f:"46-60'", gf:3, gc:5, pumGF:1, pumGC:2 },
+      { f:"61-75'", gf:3, gc:3, pumGF:2, pumGC:4 },
+      { f:"76-90'", gf:9, gc:6, pumGF:1, pumGC:6 },
+    ],
+    banco: [
+      { n:"Luciana García",      p:"F", ent:9, impT:0,  impP:0.00, rat:6.79, gs:"Perdiendo" },
+      { n:"Marissa García",      p:"M", ent:5, impT:0,  impP:0.00, rat:6.86, gs:"Empatando" },
+      { n:"Karen Jasso",         p:"D", ent:4, impT:0,  impP:0.00, rat:6.58, gs:"Perdiendo" },
+      { n:"Chelsea Lien",        p:"M", ent:3, impT:0,  impP:0.00, rat:6.77, gs:"Perdiendo" },
+      { n:"Alexia Villanueva",   p:"M", ent:7, impT:0,  impP:0.00, rat:6.70, gs:"Perdiendo" },
+      { n:"Danya Gutiérrez",     p:"M", ent:4, impT:0,  impP:0.00, rat:6.90, gs:"Perdiendo" },
+      { n:"Yashira Barrientos",  p:"F", ent:3, impT:0,  impP:0.00, rat:6.50, gs:"Perdiendo" },
+    ],
+    xi: [
+      { n:"Nicole Buenfil",          p:"G", pj:"10/13", rat:6.94, nota:"Titular casi indiscutida · en caída severa (-0.72) últimas 4J" },
+      { n:"Vianney Aleman",          p:"D", pj:"10/13", rat:6.66, nota:"Lateral fija · en caída (-0.42)" },
+      { n:"Fernanda Pinilla",        p:"D", pj:" 9/13", rat:6.88, nota:"Defensa central estable · leve caída (-0.10)" },
+      { n:"Selene Cortés",           p:"D", pj:" 9/13", rat:6.71, nota:"Defensa central · en caída (-0.28)" },
+      { n:"Alondra Camargo",         p:"D", pj:" 7/13", rat:6.63, nota:"En ascenso (+0.20) · la defensora que mejora" },
+      { n:"Valeria Razo",            p:"M", pj:"13/13", rat:6.93, nota:"⭐ Única titular en todos los partidos · en ascenso pronunciado (+0.49)" },
+      { n:"Mayalu Rausch",           p:"M", pj:" 8/13", rat:6.68, nota:"En ascenso (+0.20) · mediocampista de trabajo" },
+      { n:"Chelsea Lien",            p:"M", pj:" 6/13", rat:7.03, nota:"En ascenso (+0.40) · mejor momento del torneo" },
+      { n:"Trudi Carter",            p:"M", pj:" 5/13", rat:7.10, nota:"En caída (-0.48) · pierde minutos en el tramo final" },
+      { n:"Rubí Soto",               p:"F", pj:" 7/13", rat:7.87, nota:"⚡ Mejor del equipo · juega de MC local y de F de visita · leve caída (-0.42)" },
+      { n:"Solange Lemos",           p:"F", pj:" 5/13", rat:7.96, nota:"⭐ Mayor rating del torneo · cuando juega, León rinde mejor" },
+    ],
+    forma: [
+      { n:"Yashira Barrientos",  p:"F", prev:7.23, ult:6.50, d:-0.72 },
+      { n:"Nicole Buenfil",      p:"G", prev:7.16, ult:6.43, d:-0.72 },
+      { n:"Trudi Carter",        p:"M", prev:7.18, ult:6.70, d:-0.48 },
+      { n:"Rubí Soto",           p:"F", prev:7.87, ult:7.45, d:-0.42 },
+      { n:"Vianney Aleman",      p:"D", prev:6.79, ult:6.37, d:-0.42 },
+      { n:"Danya Gutiérrez",     p:"M", prev:7.00, ult:6.60, d:-0.40 },
+      { n:"Luciana García",      p:"F", prev:7.00, ult:6.60, d:-0.40 },
+      { n:"Selene Cortés",       p:"D", prev:6.71, ult:6.43, d:-0.28 },
+      { n:"Itzell Aleman",       p:"F", prev:6.78, ult:6.60, d:-0.18 },
+      { n:"Fernanda Pinilla",    p:"D", prev:6.90, ult:6.80, d:-0.10 },
+      { n:"Solange Lemos",       p:"F", prev:7.60, ult:7.60, d:0.00  },
+      { n:"Alondra Camargo",     p:"D", prev:6.60, ult:6.80, d:+0.20 },
+      { n:"Mayalu Rausch",       p:"M", prev:6.50, ult:6.70, d:+0.20 },
+      { n:"Chelsea Lien",        p:"M", prev:6.90, ult:7.30, d:+0.40 },
+      { n:"Ana Lozada",          p:"D", prev:6.20, ult:6.67, d:+0.47 },
+      { n:"Valeria Razo",        p:"M", prev:6.78, ult:7.27, d:+0.49 },
+    ],
+    alertas: [
+      "Recibe primero (5PJ): 0V 0E 5D — si Pumas anota primero, León no remonta. Nunca.",
+      "De visita PERDIENDO el 45.2% del tiempo — la condición más desfavorable del torneo analizado.",
+      "Banco con impacto +0.00 en los 3 gamestates — ningún cambio desde la banca genera resultado positivo.",
+    ],
+    hallazgos: [
+      "Rubí Soto cambia de posición según condición: MC de local, F de visita — anticipar marca en defensa central.",
+      "Valeria Razo es la única titular en los 13 partidos · en ascenso (+0.49) · siempre de mediocampista.",
+      "4 formaciones distintas en 6 partidos de visita — el DT no encontró un sistema estable fuera de casa.",
+      "GANANDO de visita hace cambios a los 55' y termina perdiendo — intervenir GANANDO le cuesta el partido.",
+      "Primer cambio de visita: promedio min 49'. Perdiendo de visita: mediana min 76' — reacción muy tardía.",
+      "Cuando recibe primero el gol: 0V 0E 5D — el equipo no tiene mecanismo para remontar.",
+      "Luciana García: 9 entradas desde el banco · impacto total 0 — la carta más usada sin ningún efecto.",
+      "León llega con momentum: ganó 4-0 a Atlas en J13 · pero todos sus cambios de visita siguen sin funcionar.",
+      "Franja 1-15' de visita: 0 GF y 5 GC acumulados — los primeros 15 minutos son su ventana más vulnerable.",
+    ],
+    notasSubs: [
+      { tipo:"alerta", txt:"GANANDO de visita hace cambios al 55' en tandas triples · imp −0.50 — la intervención cuando gana le cuesta la victoria." },
+      { tipo:"info",   txt:"Opera en tandas simultáneas: 55-55-55, 72-72, 78-78-78, 85-85-85 · nunca un cambio aislado." },
+      { tipo:"alerta", txt:"PERDIENDO de visita: mediana min 76' · 18 cambios con imp +0.00 — llegada tardía sin efecto en el marcador." },
+    ],
+    notasGoles: [
+      { tipo:"alerta", txt:"Franja 1-15' de visita: 0 GF y 5 GC — presionar los primeros 15 minutos es la clave táctica del partido." },
+      { tipo:"info",   txt:"Franja 31-45': León concede 2 GC y Pumas anota 6 GF históricamente — la franja más favorable para Pumas." },
+      { tipo:"alerta", txt:"Franja 76-90': León explota de local (9 GF) pero de visita solo anota 1 GF — el cierre tardío no funciona fuera." },
+    ],
+    notasLV: [
+      { tipo:"info",   txt:"De local: 3V 2E 2D con 11 pts · equipo diferente en casa · la formación 1-4-1-3-2 fue la más efectiva (3-1 vs Necaxa)." },
+      { tipo:"alerta", txt:"De visita: 1V 1E 4D con solo 4 pts · única victoria vs Querétaro (el equipo más débil del torneo)." },
+      { tipo:"alerta", txt:"De visita el 45.2% del tiempo se juega PERDIENDO — la mayor vulnerabilidad de visita de todos los equipos analizados." },
+    ],
+    notasBanco: [
+      { tipo:"alerta", txt:"Impacto total del banco: 0 en todos los gamestates · 62 sustituciones sin generar ningún resultado positivo." },
+      { tipo:"alerta", txt:"Luciana García: 9 entradas y 0 impacto · la carta más usada y la más ineficaz del torneo analizado." },
+      { tipo:"info",   txt:"El banco de León no es una amenaza táctica — independientemente del marcador, los cambios no cambian resultados." },
+    ],
+    notasForma: [
+      { tipo:"alerta", txt:"Nicole Buenfil (-0.72) y Yashira Barrientos (-0.72): portería y delantera en caída severa." },
+      { tipo:"info",   txt:"Valeria Razo (+0.49) y Chelsea Lien (+0.40): el mediocampo llega en ascenso · son las piezas más peligrosas." },
+      { tipo:"info",   txt:"Solange Lemos (7.96 estable): mayor rating del torneo · cuando juega, León es distinto." },
+      { tipo:"alerta", txt:"Rubí Soto (-0.42): leve caída pero sigue siendo la mejor del equipo por rating (7.45 últimas 4J)." },
+    ],
+  },
+t { useState, useRef } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Cell, LineChart, Line,
   CartesianGrid, ResponsiveContainer, ReferenceLine, Legend, ComposedChart
@@ -19,7 +263,7 @@ const C = {
 const POS_COLOR = { G:"#37474F", D:"#1565C0", M:"#2E7D32", F:"#B71C1C", "?":"#6D4C41" };
 
 // ═══════════════════════════════════════════════════════════════
-// DATOS
+// DATOS — TOLUCA CL26 (reales, J1-J10)
 // ═══════════════════════════════════════════════════════════════
 const DATA = {
   "Toluca": {
@@ -137,6 +381,7 @@ const DATA = {
     ],
   },
 
+  // ── TIJUANA — datos reales CL26 J1-J10 ───────────────────────
   "Tijuana": {
     torneo: "Clausura 2026 · J1–J11",
     status: "real",
@@ -259,6 +504,7 @@ const DATA = {
     ],
   },
 
+
   "Tigres UANL": {
     torneo: "Clausura 2026 · J1–J10",
     status: "real",
@@ -380,243 +626,10 @@ const DATA = {
       { tipo:"alerta", txt:"Jheniffer Cordinali (−0.42): pieza de rotación en caída — puede quedar fuera del XI titular." },
     ],
   },
-
-  "Pachuca": {
-    torneo: "Clausura 2026 · J1–J12",
-    status: "real",
-    record: { G:8, E:3, P:1, pts:27, pj:12, gf:35, gc:5 },
-    local:  { G:5, E:1, P:0, pts:16, pj:6,  gf:21, gc:2 },
-    visita: { G:3, E:2, P:1, pts:11, pj:6,  gf:14, gc:3 },
-    primeGol: { favor:"8V 2E 0D (anota 24')", contra:"0V 1E 1D (recibe 26')" },
-    minPGF: 24, minPGC: 26,
-    subsPorPartido: 4.2,
-    formaciones: [
-      { form:"1-4-4-2",   pj:9, v:6, e:2, d:1, pts:20, gf:27, gc:4, contexto:"Sistema base · bloque sólido y transición rápida" },
-      { form:"1-4-2-3-1", pj:2, v:1, e:0, d:1, pts:3,  gf:7,  gc:1, contexto:"Vs rivales que disputan el mediocampo · Cruz Azul y Necaxa" },
-      { form:"1-4-4-1-1", pj:1, v:0, e:1, d:0, pts:1,  gf:2,  gc:2, contexto:"Variante puntual vs Tigres · Corral como referencia única" },
-    ],
-    gamestates: {
-      global: { gan:59, emp:34, per:7  },
-      local:  { gan:70, emp:30, per:0  },
-      visita: { gan:47, emp:38, per:14 },
-    },
-    franjasSubs: [
-      { franja:"1-15'",  n:1,  imp: 0.00 },
-      { franja:"31-45'", n:4,  imp: 1.50 },
-      { franja:"46-60'", n:9,  imp: 0.00 },
-      { franja:"61-75'", n:20, imp:-0.10 },
-      { franja:"76-90'", n:16, imp:-0.12 },
-    ],
-    heatmap: [
-      { tipo:"Ofensivo",  gan:{n:3, imp:0.00}, emp:{n:1, imp:2.00}, per:{n:0, imp:0.00} },
-      { tipo:"Medio",     gan:{n:30,imp:-0.13},emp:{n:9, imp:0.44}, per:{n:3, imp:0.00} },
-      { tipo:"Defensivo", gan:{n:4, imp:0.00}, emp:{n:0, imp:0.00}, per:{n:0, imp:0.00} },
-    ],
-    franjasGoles: [
-      { f:"1-15'",  gf:6, gc:0, pumGF:0, pumGC:3 },
-      { f:"16-30'", gf:3, gc:1, pumGF:4, pumGC:2 },
-      { f:"31-45'", gf:8, gc:1, pumGF:5, pumGC:3 },
-      { f:"46-60'", gf:8, gc:1, pumGF:1, pumGC:2 },
-      { f:"61-75'", gf:4, gc:0, pumGF:2, pumGC:3 },
-      { f:"76-90'", gf:6, gc:2, pumGF:1, pumGC:6 },
-    ],
-    banco: [
-      { n:"Paola Garcia",              p:"F",   ent:7, impT: 2, impP: 0.29, rat:6.69, gs:"Ganando"   },
-      { n:"Julia Yareli Alvidrez",     p:"M",   ent:6, impT: 0, impP: 0.00, rat:6.82, gs:"Ganando"   },
-      { n:"Abril A. Fragoso García",   p:"M/F", ent:4, impT: 0, impP: 0.00, rat:7.18, gs:"Ganando"   },
-      { n:"Mackenzee Vance",           p:"M",   ent:4, impT: 0, impP: 0.00, rat:6.85, gs:"Ganando"   },
-      { n:"Kelly Caicedo",             p:"D",   ent:4, impT: 0, impP: 0.00, rat:6.83, gs:"Ganando"   },
-      { n:"Sydney Becerra",            p:"M/F", ent:3, impT: 0, impP: 0.00, rat:7.17, gs:"Ganando"   },
-      { n:"Alexandra Godínez",         p:"D/M", ent:5, impT:-2, impP:-0.33, rat:6.72, gs:"Ganando"   },
-      { n:"Andrea Pereira",            p:"M",   ent:1, impT:-2, impP:-2.00, rat:6.30, gs:"Ganando"   },
-    ],
-    xi: [
-      { n:"Esthefanny Barreras",      p:"G", pj:"11/12", rat:7.57, nota:"Titular indiscutible · sólida bajo los tres palos" },
-      { n:"Berenice Ibarra Hernández",p:"D", pj:"12/12", rat:7.18, nota:"La única con 12/12 · presencia continua en ambas fases" },
-      { n:"Osinachi Ohale",           p:"D", pj:"10/12", rat:6.96, nota:"Zaguera central internacional · lectura táctica elevada" },
-      { n:"Yirleidis Quejada Minota", p:"D", pj:"10/12", rat:7.02, nota:"En ascenso (+0.26) · central físico con salida limpia" },
-      { n:"Kenti Robles",             p:"D", pj:" 9/12", rat:7.12, nota:"⚑ Lateral que se proyecta · su espalda es el espacio más explotable" },
-      { n:"Karla Nieto",              p:"M", pj:"12/12", rat:7.43, nota:"Omnipresente · cubre los dos carrileros laterales" },
-      { n:"Nina Nicosia",             p:"M", pj:"12/12", rat:7.74, nota:"⚑ Motor creativo · en caída (-1.07 últimas 3J)" },
-      { n:"Andrea Pereira",           p:"M", pj:" 8/12", rat:7.45, nota:"Verticalidad cuando inicia · mejor como titular que suplente" },
-      { n:"María Natalia Mauleon",    p:"M", pj:" 7/12", rat:6.90, nota:"⚑ En caída pronunciada (-0.90) · forma baja" },
-      { n:"Charlyn Corral",           p:"F", pj:" 9/12", rat:8.49, nota:"⭐ Mejor del torneo · en ascenso (+0.17) · máximo peligro" },
-      { n:"Chinwendu Ihezuo",         p:"F", pj:" 5/12", rat:6.85, nota:"Segunda punta · presión alta · comparte con Fragoso" },
-    ],
-    forma: [
-      { n:"Charlyn Corral",           p:"F", prev:8.30, ult:8.47, d:+0.17 },
-      { n:"Karla Nieto",              p:"M", prev:7.41, ult:7.46, d:+0.05 },
-      { n:"Yirleidis Quejada",        p:"D", prev:6.94, ult:7.20, d:+0.26 },
-      { n:"Osinachi Ohale",           p:"D", prev:6.88, ult:7.04, d:+0.16 },
-      { n:"Esthefanny Barreras",      p:"G", prev:7.73, ult:7.38, d:-0.35 },
-      { n:"Berenice Ibarra",          p:"D", prev:7.24, ult:7.08, d:-0.16 },
-      { n:"Kenti Robles",             p:"D", prev:7.15, ult:7.07, d:-0.08 },
-      { n:"Andrea Pereira",           p:"M", prev:7.95, ult:7.32, d:-0.63 },
-      { n:"María Natalia Mauleon",    p:"M", prev:7.60, ult:6.70, d:-0.90 },
-      { n:"Nina Nicosia",             p:"M", prev:8.19, ult:7.12, d:-1.07 },
-    ],
-    alertas: [
-      "Pachuca marca primero en 10/12 partidos — cuando lo logra promedia 2.60 pts/PJ.",
-      "Franjas 31-45' y 46-60': concentran 16 de sus 35 goles (46%) — el tramo más letal.",
-      "Cambio Ofensivo desde EMPATANDO: impacto +2.00 — su combinación más peligrosa del banco.",
-    ],
-    hallazgos: [
-      "84% de cambios son tipo Medio — Torres gestiona energía, no modifica el sistema.",
-      "Cambios en 61-75' GANANDO: impacto -0.13 — el rival se vuelve más vulnerable cuando enfrían el partido.",
-      "Nina Nicosia: caída de -1.07 en J8-J10 — el motor creativo no llega en su mejor momento.",
-      "Paola Garcia es la única suplente con impacto positivo neto (+0.29) — su ingreso activa el ataque.",
-      "J6 vs Tigres (2-2): único empate en casa · modelo con bloque defensivo y contraataque válido para Pumas.",
-    ],
-    notasSubs: [
-      { tipo:"info",   txt:"61-75' concentra el 40% de los cambios — Torres hace rotaciones masivas en esa ventana." },
-      { tipo:"info",   txt:"84% de los cambios son tipo Medio — el sistema no cambia independientemente del marcador." },
-      { tipo:"alerta", txt:"Cambio Ofensivo desde empate tiene impacto +2.00 — si el partido está igualado al 70', anticipar el ingreso de Paola Garcia." },
-      { tipo:"alerta", txt:"Cambios en 76-90' tienen impacto -0.12 — Pachuca pierde rendimiento en el cierre, momento para presionar." },
-    ],
-    notasGoles: [
-      { tipo:"alerta", txt:"Franja 1-15': Pachuca anota 6 GF y Pumas recibe 3 GC — arranque peligroso, bloque compacto obligatorio." },
-      { tipo:"alerta", txt:"Franjas 31-45' y 46-60': 16 goles de Pachuca (46% del total) — el tramo de mayor concentración ofensiva." },
-      { tipo:"info",   txt:"Franja 76-90': Pumas recibe 6 GC — si el partido llega vivo al 75', el riesgo defensivo es máximo." },
-    ],
-    notasLV: [
-      { tipo:"info",   txt:"Como local: 2.67 pts/PJ · 0 minutos PERDIENDO · 5G-1E-0D — el mejor rendimiento del torneo en casa." },
-      { tipo:"info",   txt:"Como visita: 1.83 pts/PJ · 3G-2E-1D — sigue siendo peligroso con 14 GF en 6 partidos." },
-      { tipo:"alerta", txt:"Los 3 empates del torneo ocurrieron todos de visita (Tigres J6, Toluca J9, Guadalajara J12) — cuando no marca primero, el resultado se complica." },
-    ],
-    notasBanco: [
-      { tipo:"info",   txt:"Paola Garcia: 7 entradas · única suplente con impacto positivo neto — su ingreso activa la segunda punta." },
-      { tipo:"alerta", txt:"Alexandra Godínez y Andrea Pereira como suplentes: impacto negativo (-0.33 y -2.00) — no son amenaza real desde el banco." },
-      { tipo:"info",   txt:"Abril Fragoso y Sydney Becerra mantienen rating alto desde el banco (+7.18 y +7.17) — entran preparadas." },
-    ],
-    notasForma: [
-      { tipo:"alerta", txt:"Charlyn Corral (+0.17) llega en su mejor momento del torneo — el peor momento para enfrentarla." },
-      { tipo:"alerta", txt:"Nina Nicosia (-1.07) y María Natalia Mauleon (-0.90): el mediocampo creativo en descenso pronunciado." },
-      { tipo:"info",   txt:"Yirleidis Quejada (+0.26) y Osinachi Ohale (+0.16): la zaga central llega a su mejor nivel." },
-    ],
-  },
-
-  "Pumas UNAM": {
-    torneo: "Clausura 2026 · J1–J10",
-    status: "real",
-    record: { G:4, E:3, P:3, pts:15, pj:10, gf:10, gc:13 },
-    local:  { G:3, E:0, P:1, pts:9,  pj:4,  gf:5,  gc:2  },
-    visita: { G:1, E:3, P:2, pts:6,  pj:6,  gf:5,  gc:11 },
-    primeGol: { favor:"4V 1E 0D (anota 40')", contra:"0V 1E 3D (recibe 18')" },
-    minPGF: 40, minPGC: 18,
-    subsPorPartido: 4.4,
-    formaciones: [
-      { form:"1-4-2-3-1", pj:6, v:3, e:1, d:2, pts:10, gf:7,  gc:7,  contexto:"Formación base · versatilidad ofensiva" },
-      { form:"1-4-4-2",   pj:3, v:1, e:1, d:1, pts:4,  gf:3,  gc:6,  contexto:"Doble punta · más físico, menos control" },
-    ],
-    gamestates: {
-      global: { gan:28.1, emp:40.7, per:31.2 },
-      local:  { gan:47.2, emp:37.2, per:15.6 },
-      visita: { gan:15.4, emp:43.0, per:41.7 },
-    },
-    franjasSubs: [
-      { franja:"1-30'",  n:1,  imp:0.00  },
-      { franja:"31-45'", n:0,  imp:0.00  },
-      { franja:"46-60'", n:9,  imp:0.44  },
-      { franja:"61-75'", n:22, imp:0.27  },
-      { franja:"76-90'", n:12, imp:-0.25 },
-    ],
-    heatmap: [
-      { tipo:"Ofensivo",  gan:{n:2,imp:0.00},  emp:{n:0,imp:0.00},  per:{n:1,imp:0.00} },
-      { tipo:"Medio",     gan:{n:16,imp:-0.38}, emp:{n:3,imp:1.33},  per:{n:16,imp:0.25} },
-      { tipo:"Defensivo", gan:{n:1,imp:0.00},  emp:{n:2,imp:2.00},  per:{n:3,imp:0.33} },
-    ],
-    franjasGoles: [
-      { f:"1-15'",  gf:0, gc:2, pumGF:0, pumGC:2 },
-      { f:"16-30'", gf:3, gc:2, pumGF:3, pumGC:2 },
-      { f:"31-45'", gf:4, gc:3, pumGF:4, pumGC:3 },
-      { f:"46-60'", gf:1, gc:1, pumGF:1, pumGC:1 },
-      { f:"61-75'", gf:1, gc:1, pumGF:1, pumGC:1 },
-      { f:"76-90'", gf:1, gc:4, pumGF:1, pumGC:4 },
-    ],
-    banco: [
-      { n:"Wendy Bonilla",         p:"M", ent:3, impT:3,  impP:1.00, rat:7.17, gs:"Empatando" },
-      { n:"Paola Chavero",         p:"D", ent:1, impT:2,  impP:2.00, rat:6.70, gs:"Empatando" },
-      { n:"Ximena Ríos",           p:"D", ent:1, impT:2,  impP:2.00, rat:6.40, gs:"Empatando" },
-      { n:"Michelle González",     p:"M", ent:5, impT:2,  impP:0.40, rat:6.78, gs:"Ganando"   },
-      { n:"Alexa Huerta",          p:"M", ent:3, impT:1,  impP:0.33, rat:6.70, gs:"Empatando" },
-      { n:"Ana Mendoza",           p:"D", ent:1, impT:1,  impP:1.00, rat:6.60, gs:"Perdiendo" },
-      { n:"Alejandra Guerrero",    p:"M", ent:5, impT:1,  impP:0.20, rat:7.02, gs:"Perdiendo" },
-      { n:"Karen Becerril",        p:"M", ent:5, impT:1,  impP:0.20, rat:6.47, gs:"Ganando"   },
-    ],
-    xi: [
-      { n:"Jashia López / Heidi González", p:"G", pj:"4/4",  rat:7.20, nota:"Portería compartida · Jashia en ascenso (+0.13)" },
-      { n:"Karen Ramírez",                 p:"D", pj:"9/10", rat:6.54, nota:"Lateral fija · mayor continuidad del equipo" },
-      { n:"Julissa Dávila",                p:"D", pj:"8/10", rat:6.98, nota:"En ascenso (+0.20) · pilar defensivo" },
-      { n:"Paola Chavero Álvarez",         p:"D", pj:"8/10", rat:6.76, nota:"En ascenso (+0.11) · estabilidad en la zaga" },
-      { n:"Alejandra Guerrero",            p:"M", pj:"5/10", rat:7.02, nota:"⚑ MC jugando como LI · en caída (-0.40) · posición forzada" },
-      { n:"Alexa Huerta",                  p:"M", pj:"6/10", rat:6.85, nota:"En ascenso (+0.30) · construye desde el centro" },
-      { n:"Silvana Flores Dorrel",         p:"M", pj:"7/10", rat:6.93, nota:"Leve caída (-0.17) · mediocampista dinámica" },
-      { n:"Cristina Torres",               p:"M", pj:"7/10", rat:7.41, nota:"⭐ Mejor del torneo · en ascenso pronunciado (+0.33)" },
-      { n:"Angelina Nicole Hix",           p:"F", pj:"6/10", rat:7.42, nota:"Segunda mejor · leve caída (-0.15)" },
-      { n:"Nayely Bolaños",                p:"F", pj:"7/10", rat:7.19, nota:"Estable (0.00) · referente ofensiva" },
-      { n:"Dorian Hernández",              p:"F", pj:"4/10", rat:7.30, nota:"Leve caída (-0.22) · rotación ofensiva" },
-    ],
-    forma: [
-      { n:"Alejandra Guerrero",    p:"M", prev:7.00, ult:6.60, d:-0.40 },
-      { n:"Dorian Hernández",      p:"F", prev:7.43, ult:7.20, d:-0.22 },
-      { n:"Karen Ramírez",         p:"D", prev:6.60, ult:6.43, d:-0.17 },
-      { n:"Silvana F. Dorrel",     p:"M", prev:7.00, ult:6.83, d:-0.17 },
-      { n:"Angelina Hix",          p:"F", prev:7.65, ult:7.50, d:-0.15 },
-      { n:"Jashia López",          p:"G", prev:7.30, ult:7.17, d:-0.13 },
-      { n:"Nayely Bolaños",        p:"F", prev:7.10, ult:7.10, d:0.00  },
-      { n:"Paola Chavero",         p:"D", prev:6.72, ult:6.83, d:+0.11 },
-      { n:"Julissa Dávila",        p:"D", prev:6.90, ult:7.10, d:+0.20 },
-      { n:"Wendy Bonilla",         p:"M", prev:6.83, ult:7.07, d:+0.23 },
-      { n:"Alexa Huerta",          p:"M", prev:6.80, ult:7.10, d:+0.30 },
-      { n:"Cristina Torres",       p:"M", prev:7.23, ult:7.57, d:+0.33 },
-    ],
-    alertas: [
-      "Cuando Pumas anota primero: 4V 1E 0D. Cuando recibe primero: 0V 1E 3D — el primer gol decide el partido.",
-      "De visita juega PERDIENDO el 41.7% del tiempo — muy vulnerable fuera de casa.",
-      "Franja 1-15': 0 GF y 2 GC — los primeros 15 minutos son la zona de mayor riesgo defensivo.",
-    ],
-    hallazgos: [
-      "Alejandra Guerrero juega como LI siendo MC — posición forzada que afecta su rendimiento (-0.40 en forma).",
-      "Defensivo empatando: +2.00 imp (2 usos) — la jugada más efectiva del banco pero infrautilizada.",
-      "Medio empatando: +1.33 imp — el banco funciona mejor con el marcador igualado que en cualquier otro contexto.",
-      "GANANDO el banco tiene impacto negativo (-0.38) — los cambios de consolidación cuestan puntos.",
-      "Cristina Torres: mejor del torneo y en ascenso pronunciado (+0.33) — pieza clave en el tramo final.",
-      "Portería sin titular fija: Jashia López y Heidi González se turnan · Jashia en mejor momento.",
-      "Franja 76-90': solo 1 GF y 4 GC — el tramo defensivamente más peligroso.",
-      "El 70% de los goles de Pumas ocurren antes del min 45 — equipo de primera mitad.",
-    ],
-    notasSubs: [
-      { tipo:"info",   txt:"El 50% de los cambios ocurren en la franja 61-75' — la DT actúa en el tramo central del 2T." },
-      { tipo:"alerta", txt:"GANANDO hace cambios con impacto negativo (-0.38) — los cambios de consolidación cuestan puntos." },
-      { tipo:"info",   txt:"Empatando activa los mejores cambios (+2.00 defensivo, +1.33 medio) — el banco rinde con marcador igualado." },
-    ],
-    notasGoles: [
-      { tipo:"alerta", txt:"Franja 1-15': 0 GF y 2 GC — los primeros 15 minutos son zona de riesgo alto." },
-      { tipo:"alerta", txt:"Franja 76-90': solo 1 GF y 4 GC — el equipo se desarma en el tramo final." },
-      { tipo:"info",   txt:"El 70% de los goles de Pumas ocurren antes del minuto 45 — primera mitad como territorio propio." },
-    ],
-    notasLV: [
-      { tipo:"info",   txt:"De local: 3V 0E 1D con GC:2 en 4 PJ — la fortaleza en casa es el activo más sólido del equipo." },
-      { tipo:"alerta", txt:"De visita: 1V 3E 2D con GC:11 en 6 PJ — el equipo concede mucho fuera de casa." },
-      { tipo:"alerta", txt:"De visita el 41.7% del tiempo se juega perdiendo — la condición tácticamente más difícil." },
-    ],
-    notasBanco: [
-      { tipo:"info",   txt:"Wendy Bonilla: referente del banco (+1.00 imp/entrada) · entra empatando con efecto inmediato." },
-      { tipo:"info",   txt:"Paola Chavero y Ximena Ríos: +2.00 imp empatando — cartas defensivas de máximo impacto cuando el marcador está igualado." },
-      { tipo:"alerta", txt:"Michelle González y Karen Becerril: 5 entradas cada una con impacto bajo — no cambian partidos." },
-    ],
-    notasForma: [
-      { tipo:"alerta", txt:"Alejandra Guerrero (-0.40): MC jugando como LI — rendimiento afectado por posición forzada." },
-      { tipo:"info",   txt:"Cristina Torres (+0.33) y Alexa Huerta (+0.30): el mediocampo llega al mejor momento del torneo." },
-      { tipo:"info",   txt:"Julissa Dávila (+0.20) y Wendy Bonilla (+0.23): bloque defensivo-medio en ascenso." },
-      { tipo:"alerta", txt:"Angelina Hix (-0.15) y Dorian Hernández (-0.22): el ataque titular llega en ligero descenso." },
-    ],
-  },
-
   // ── RESTO DE EQUIPOS (arquitectura lista, datos pendientes) ──────────
   ...[
-    "Chivas","América","Monterrey",
-    "Atlas","Santos Laguna","Necaxa","FC Juárez",
+    "Chivas","América","Pumas UNAM","Monterrey",
+    "Atlas","Pachuca","Santos Laguna","Necaxa","FC Juárez",
     "Querétaro","Atlético de San Luis","Cruz Azul",
     "Puebla FC","Mazatlán","León"
   ].reduce((acc, eq) => {
@@ -632,7 +645,6 @@ const DATA = {
 };
 
 const EQUIPOS = Object.keys(DATA);
-
 
 // ═══════════════════════════════════════════════════════════════
 // COMPONENTES BASE
@@ -753,6 +765,8 @@ function SecXI({ d }) {
   return (
     <>
       <Divider label="XI Tipo de Local" />
+
+      {/* Filtro posición */}
       <div style={{ display:"flex", gap:6, marginBottom:14 }}>
         {posiciones.map(p => (
           <button key={p} onClick={()=>setPf(p)}
@@ -798,6 +812,7 @@ function SecXI({ d }) {
         })}
       </div>
 
+      {/* Formaciones */}
       <Divider label="Formaciones" />
       <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
         {d.formaciones?.map((f,i) => (
@@ -903,6 +918,7 @@ function SecGoles({ d }) {
   return (
     <>
       <Divider label="Distribución de Goles por Franja" />
+
       <div style={{ display:"flex", gap:6, marginBottom:16 }}>
         {[["comparativa","vs Pumas"],["equipo","Solo rival"]].map(([id,lbl]) => (
           <button key={id} onClick={()=>setVista(id)}
@@ -982,6 +998,7 @@ function SecLocalVisita({ d }) {
   return (
     <>
       <Divider label="Local vs Visita" />
+
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
         {lv.map(({lbl,r,gs,color}) => (
           <div key={lbl} style={{ background:C.navyL, borderRadius:8, padding:"16px",
@@ -991,6 +1008,7 @@ function SecLocalVisita({ d }) {
               <KPI label="Record" value={`${r.G}V${r.E}E${r.P}D`} sub={`${r.pts} pts`} small accent={color} />
               <KPI label="Pts/PJ" value={r.pj>0?(r.pts/r.pj).toFixed(2):"—"} small accent={color} />
             </div>
+            {/* Mini gamestates */}
             {[["Ganando",gs.gan,C.green],["Empatando",gs.emp,C.gold],["Perdiendo",gs.per,C.red]].map(([n,v,c]) => (
               <div key={n} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
                 <span style={{ color:C.gray, fontSize:10, width:62 }}>{n}</span>
@@ -1062,11 +1080,12 @@ function SecBanco({ d }) {
               <div style={{ color:C.gray, fontSize:9 }}>Rat.Sup</div>
               <div style={{ color:j.rat>=7.5?C.gold:C.cream, fontWeight:700, fontSize:14 }}>{j.rat}</div>
             </div>
+            {/* Micro bar */}
             <div style={{ height:40, display:"flex", alignItems:"flex-end" }}>
               <div style={{ width:"100%", background:`${C.white}08`, borderRadius:4, height:40, overflow:"hidden",
                             display:"flex", alignItems:"flex-end" }}>
                 <div style={{ background:i===0?C.gold:i===1?C.greenL:C.blue,
-                              width:"100%", height:`${Math.max(j.impT,0)/6*100}%`, transition:"height 0.5s ease" }} />
+                              width:"100%", height:`${j.impT/6*100}%`, transition:"height 0.5s ease" }} />
               </div>
             </div>
           </div>
