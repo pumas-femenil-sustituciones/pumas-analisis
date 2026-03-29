@@ -625,9 +625,132 @@ const DATA = {
     ],
   },
 
+  "Monterrey": {
+    torneo: "Clausura 2026 - J1-J14",
+    status: "real",
+    record: { G:11, E:3, P:0, pts:36, pj:14, gf:35, gc:4 },
+    local:  { G:6,  E:1, P:0, pts:19, pj:7,  gf:21, gc:1 },
+    visita: { G:5,  E:2, P:0, pts:17, pj:7,  gf:14, gc:3 },
+    primeGol: { favor:"11V 0E 0D (anota ~19')", contra:"0V 2E 0D (recibe ~35')" },
+    minPGF: 19, minPGC: 35,
+    subsPorPartido: 4.9,
+    formaciones: [
+      { form:"1-4-2-3-1", pj:9,  v:6, e:3, d:0, pts:21, gf:22, gc:2, contexto:"Formacion base 9 PJ dominante" },
+      { form:"1-3-4-1-2", pj:2,  v:2, e:0, d:0, pts:6,  gf:7,  gc:1, contexto:"Variante ofensiva J6-J7 2V 0E 0D" },
+      { form:"1-4-1-4-1", pj:1,  v:1, e:0, d:0, pts:3,  gf:2,  gc:0, contexto:"Ajuste tactico vs Toluca J8" },
+      { form:"1-4-3-2-1", pj:1,  v:1, e:0, d:0, pts:3,  gf:2,  gc:1, contexto:"Local vs Cruz Azul J4" },
+      { form:"1-4-4-1-1", pj:1,  v:1, e:0, d:0, pts:3,  gf:2,  gc:0, contexto:"Variante J11 vs Mazatlan" },
+    ],
+    gamestates: {
+      global: { gan:62.5, emp:32.1, per:5.5  },
+      local:  { gan:74.1, emp:25.9, per:0.0  },
+      visita: { gan:50.8, emp:38.3, per:11.0 },
+    },
+    franjasSubs: [
+      { franja:"1-15'",  n:0,  imp:0.0  },
+      { franja:"16-30'", n:1,  imp:0.0  },
+      { franja:"31-45'", n:2,  imp:0.0  },
+      { franja:"46-60'", n:19, imp:0.11 },
+      { franja:"61-75'", n:28, imp:0.14 },
+      { franja:"76-90'", n:18, imp:0.06 },
+    ],
+    heatmap: [
+      { tipo:"Ofensivo",  gan:{n:4,imp:0.0}, emp:{n:0,imp:0.0}, per:{n:0,imp:0.0} },
+      { tipo:"Medio",     gan:{n:48,imp:0.0},emp:{n:6,imp:0.0}, per:{n:7,imp:1.0} },
+      { tipo:"Defensivo", gan:{n:3,imp:0.0}, emp:{n:0,imp:0.0}, per:{n:0,imp:0.0} },
+    ],
+    franjasGoles: [
+      { f:"1-15'",  gf:8, gc:0, pumGF:0, pumGC:5 },
+      { f:"16-30'", gf:4, gc:1, pumGF:4, pumGC:2 },
+      { f:"31-45'", gf:9, gc:2, pumGF:8, pumGC:4 },
+      { f:"46-60'", gf:3, gc:0, pumGF:2, pumGC:3 },
+      { f:"61-75'", gf:3, gc:1, pumGF:3, pumGC:4 },
+      { f:"76-90'", gf:8, gc:0, pumGF:2, pumGC:6 },
+    ],
+    banco: [
+      { n:"Sofia Martinez",              p:"M", ent:7, impT:2, impP:0.29, rat:6.80, gs:"Ganando"   },
+      { n:"Diana Garcia",                p:"M", ent:1, impT:1, impP:1.0,  rat:6.90, gs:"Perdiendo" },
+      { n:"Emily Gielnik",               p:"F", ent:6, impT:1, impP:0.17, rat:6.83, gs:"Ganando"   },
+      { n:"Allison Veloz",               p:"F", ent:3, impT:1, impP:0.33, rat:6.57, gs:"Perdiendo" },
+      { n:"Samantha Simental",           p:"D", ent:3, impT:1, impP:0.33, rat:6.60, gs:"Ganando"   },
+      { n:"Christina Marie Burkenroad",  p:"F", ent:1, impT:0, impP:0.0,  rat:7.20, gs:"Ganando"   },
+      { n:"Ashlyn Fernandez",            p:"D", ent:4, impT:0, impP:0.0,  rat:6.65, gs:"Ganando"   },
+    ],
+    xi: [
+      { n:"Paola Manrique",       p:"G", pj:"14/14", rat:7.19, nota:"Intocable 14/14 PJ en ascenso (+0.19)" },
+      { n:"Carol Cazares",        p:"D", pj:"12/14", rat:7.02, nota:"Defensa central 12/14 PJ estable" },
+      { n:"Alejandra Calderon",   p:"D", pj:"9/14",  rat:7.21, nota:"Lateral 9/14 PJ leve caida (-0.13)" },
+      { n:"Daiane Santos",        p:"D", pj:"7/14",  rat:7.19, nota:"Defensa 7/14 PJ en ascenso (+0.44)" },
+      { n:"Daniela Monroy",       p:"D", pj:"9/14",  rat:6.80, nota:"Lateral 8/14 PJ estable" },
+      { n:"Diana Evangelista",    p:"M", pj:"13/14", rat:7.28, nota:"Pivote 13/14 PJ motor defensivo-ofensivo" },
+      { n:"Fatima Servin",        p:"M", pj:"7/14",  rat:7.24, nota:"Pivote 7.24 rating en ascenso (+0.19)" },
+      { n:"Marcela Restrepo",     p:"M", pj:"8/14",  rat:7.33, nota:"Enganche 7.33 rating 8/14 PJ" },
+      { n:"Lucia Garcia",         p:"F", pj:"9/14",  rat:7.72, nota:"Mejor del torneo (7.72) baja leve J8-J14 (-1.02)" },
+      { n:"Allison Veloz",        p:"F", pj:"8/14",  rat:7.03, nota:"Delantera en ascenso (+0.12) 12/14 PJ" },
+      { n:"Jermaine Seoposenwe",  p:"F", pj:"5/14",  rat:6.92, nota:"Delantera 12/14 PJ fija en ataque" },
+      { n:"Valeria Del Campo",    p:"D", pj:"(banca)",rat:null, nota:"(banca) Defensa cobertura tactica" },
+      { n:"Christina Burkenroad", p:"F", pj:"(banca)",rat:7.37, nota:"(banca) 7.37 rating titular amenaza desde min 60" },
+    ],
+    forma: [
+      { n:"Dania Perez",                   p:"M", prev:6.80, ult:7.70, d:0.90  },
+      { n:"Valerie Vargas",                p:"F", prev:7.20, ult:7.90, d:0.70  },
+      { n:"Daiane Limeira Santos",         p:"D", prev:6.93, ult:7.38, d:0.45  },
+      { n:"Daniela Monroy",                p:"D", prev:6.55, ult:7.00, d:0.45  },
+      { n:"Valeria del Campo Gutierrez",   p:"D", prev:6.94, ult:7.30, d:0.36  },
+      { n:"Paola Manrique",                p:"G", prev:7.10, ult:7.29, d:0.19  },
+      { n:"Karol Bernal",                  p:"D", prev:6.65, ult:6.80, d:0.15  },
+      { n:"Allison Veloz",                 p:"F", prev:6.98, ult:7.10, d:0.12  },
+      { n:"Alice Soto",                    p:"M", prev:7.35, ult:7.43, d:0.08  },
+      { n:"Carol Cazares Carrera",         p:"D", prev:6.99, ult:7.06, d:0.07  },
+      { n:"Sofia Martinez",                p:"M", prev:7.10, ult:7.05, d:-0.05 },
+      { n:"Diana Garcia",                  p:"M", prev:7.33, ult:7.24, d:-0.09 },
+      { n:"Jermaine Seoposenwe",           p:"F", prev:7.00, ult:6.90, d:-0.10 },
+      { n:"Samantha Simental",             p:"D", prev:7.00, ult:6.90, d:-0.10 },
+      { n:"Alejandra Calderon",            p:"D", prev:7.26, ult:7.12, d:-0.14 },
+    ],
+    alertas: [
+      "Si Monterrey anota primero: 11V 0E 0D (100%). El equipo mas letal del torneo tras el primer gol.",
+      "Como local nunca ha estado PERDIENDO (0%). Pumas recibe 5 GC en la franja 1-15'.",
+      "Christina Burkenroad desde banca: 7.37 rating titular. Entrara a definir desde el min 60.",
+    ],
+    hallazgos: [
+      "Lucia Garcia (7.72 rating): mejor del plantel. Baja leve en J8-J14 (-1.02) pero aun lidera.",
+      "90% cambios tipo Medio: Monterrey gestiona el partido, no redefine tacticamente.",
+      "Franja 31-45': MTY 9 GF. Pumas anota 8 GF historicamente. El tramo mas abierto.",
+      "Doble pivote Diana Evangelista + Fatima Servin. Presionar alto antes de que asienten.",
+      "J05 (Leon 1-1) y J09 (America 1-1): los unicos empates llegaron remontando. Pumas debe aguantar.",
+      "Katty Martinez fuera por lesion. La amenaza directa del banco no estara disponible.",
+      "Valerie Vargas (+0.70) y Dania Perez (+0.90): las jugadoras mas en alza del plantel.",
+    ],
+    notasSubs: [
+      { tipo:"alerta", txt:"90% de los cambios son tipo Medio. Gestion de plantel, no ajuste tactico." },
+      { tipo:"alerta", txt:"81% de los cambios entran GANANDO. Monterrey administra ventajas, no las amplia." },
+      { tipo:"info",   txt:"Los 7 cambios entrando PERDIENDO recuperaron el empate en todos (imp prom +1.0)." },
+    ],
+    notasGoles: [
+      { tipo:"alerta", txt:"Franja 1-15': MTY 8 GF y 0 GC. Pumas recibe 5 GC en ese tramo. El inicio es critico." },
+      { tipo:"alerta", txt:"Franja 31-45': MTY 9 GF. Ventana mas peligrosa. Coincide con 8 GF de Pumas historicamente." },
+      { tipo:"info",   txt:"Monterrey concede solo 4 GC en 14 partidos. La mejor diferencia defensiva (+31)." },
+    ],
+    notasLV: [
+      { tipo:"alerta", txt:"Como local: GC:1 en 630 minutos. 74% del tiempo ganando. 0% perdiendo." },
+      { tipo:"info",   txt:"Como visita: 51% ganando. Solo 2 empates como unico resultado negativo." },
+      { tipo:"alerta", txt:"El J15 es en el estadio BBVA. La fortaleza mas grande de Monterrey en el torneo." },
+    ],
+    notasBanco: [
+      { tipo:"alerta", txt:"Katty Martinez fuera por lesion. Eliminada del banco disponible." },
+      { tipo:"info",   txt:"Sofia Martinez: carta mas usada del banco (7 entradas). Mayor impacto acumulado." },
+      { tipo:"alerta", txt:"Christina Burkenroad disponible desde banca. 7.37 rating titular. Entrara a definir." },
+    ],
+    notasForma: [
+      { tipo:"info",   txt:"Valerie Vargas (+0.70) y Dania Perez (+0.90): mayor alza en el tramo final." },
+      { tipo:"alerta", txt:"Lucia Garcia (-1.02): baja pronunciada en J8-J14. Aun mejor del plantel pero en descenso." },
+      { tipo:"alerta", txt:"Christina Burkenroad (-0.49): leve caida. Posible factor en la decision del banco." },
+      { tipo:"info",   txt:"Paola Manrique (+0.19) y Daiane Santos (+0.44): la defensa llega en su mejor momento." },
+    ],
+  },
 
-  ...[
-    "Chivas","América","Monterrey",
+  ...["Chivas","América",
     "Atlas","Pachuca","Santos Laguna","Necaxa","FC Juárez",
     "Querétaro","Atlético de San Luis","Cruz Azul",
     "Puebla FC","Mazatlán FC","Xolas"
@@ -736,7 +859,7 @@ function SecResumen({ d }) {
           <BarChart data={gsData} margin={{top:5,right:10,left:-15,bottom:0}} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke={`${C.white}08`} vertical={false} />
             <XAxis dataKey="name" tick={{fill:C.cream, fontSize:12}} axisLine={false} tickLine={false} />
-            <YAxis tick={{fill:C.gray, fontSize:10}} axisLine={false} tickLine={false} unit="%" domain={[0,60]} />
+            <YAxis tick={{fill:C.gray, fontSize:10}} axisLine={false} tickLine={false} unit="%" domain={[0,80]} />
             <TT formatter={v=>`${v}%`} />
             <Legend wrapperStyle={{color:C.gray, fontSize:11}} />
             <Bar dataKey="global" name="Global"  fill={C.gold}  radius={[3,3,0,0]} />
@@ -764,8 +887,6 @@ function SecXI({ d }) {
   return (
     <>
       <Divider label="XI Tipo de Local" />
-
-      {/* Filtro posición */}
       <div style={{ display:"flex", gap:6, marginBottom:14 }}>
         {posiciones.map(p => (
           <button key={p} onClick={()=>setPf(p)}
@@ -778,12 +899,12 @@ function SecXI({ d }) {
 
       <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
         {xi?.map((j,i) => {
-          const isKey = j.n?.includes("Le Sommer");
-          const isWarn = j.n?.includes("Jakobsson");
+          const isBanca = j.pj === "(banca)";
+          const isKey = j.rat >= 7.8;
           return (
             <div key={i} style={{
-              background: isKey ? `${C.gold}18` : isWarn ? `${C.red}15` : C.navyL,
-              border:`1px solid ${isKey ? C.gold : isWarn ? C.red : C.white}18`,
+              background: isBanca ? `${C.red}15` : isKey ? `${C.gold}18` : C.navyL,
+              border:`1px solid ${isBanca ? C.red : isKey ? C.gold : C.white}18`,
               borderRadius:7, padding:"10px 14px",
               display:"grid", gridTemplateColumns:"36px 28px 1fr 52px 120px",
               alignItems:"center", gap:10
@@ -811,7 +932,6 @@ function SecXI({ d }) {
         })}
       </div>
 
-      {/* Formaciones */}
       <Divider label="Formaciones" />
       <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
         {d.formaciones?.map((f,i) => (
@@ -822,7 +942,7 @@ function SecXI({ d }) {
               <Tag color={C.greenL}>{f.v}V</Tag>
               <Tag color={C.gold}>{f.e}E</Tag>
               <Tag color={C.redL}>{f.d}D</Tag>
-              <Tag>{(f.pts/f.pj).toFixed(2)} pts/PJ</Tag>
+              <Tag>{(f.pts/Math.max(f.pj,1)).toFixed(2)} pts/PJ</Tag>
             </div>
             <div style={{ color:C.gray, fontSize:11 }}>{f.contexto}</div>
             <div style={{ color:C.cream, fontSize:12, marginTop:4 }}>GF:{f.gf} GC:{f.gc}</div>
@@ -917,7 +1037,6 @@ function SecGoles({ d }) {
   return (
     <>
       <Divider label="Distribución de Goles por Franja" />
-
       <div style={{ display:"flex", gap:6, marginBottom:16 }}>
         {[["comparativa","vs Pumas"],["equipo","Solo rival"]].map(([id,lbl]) => (
           <button key={id} onClick={()=>setVista(id)}
@@ -997,7 +1116,6 @@ function SecLocalVisita({ d }) {
   return (
     <>
       <Divider label="Local vs Visita" />
-
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
         {lv.map(({lbl,r,gs,color}) => (
           <div key={lbl} style={{ background:C.navyL, borderRadius:8, padding:"16px",
@@ -1007,7 +1125,6 @@ function SecLocalVisita({ d }) {
               <KPI label="Record" value={`${r.G}V${r.E}E${r.P}D`} sub={`${r.pts} pts`} small accent={color} />
               <KPI label="Pts/PJ" value={r.pj>0?(r.pts/r.pj).toFixed(2):"—"} small accent={color} />
             </div>
-            {/* Mini gamestates */}
             {[["Ganando",gs.gan,C.green],["Empatando",gs.emp,C.gold],["Perdiendo",gs.per,C.red]].map(([n,v,c]) => (
               <div key={n} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
                 <span style={{ color:C.gray, fontSize:10, width:62 }}>{n}</span>
@@ -1026,7 +1143,7 @@ function SecLocalVisita({ d }) {
           <BarChart data={gsComp} margin={{top:5,right:10,left:-15,bottom:0}} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke={`${C.white}08`} vertical={false} />
             <XAxis dataKey="name" tick={{fill:C.cream, fontSize:11}} axisLine={false} tickLine={false} />
-            <YAxis tick={{fill:C.gray, fontSize:10}} axisLine={false} tickLine={false} unit="%" domain={[0,60]} />
+            <YAxis tick={{fill:C.gray, fontSize:10}} axisLine={false} tickLine={false} unit="%" domain={[0,80]} />
             <TT formatter={v=>`${v}%`} />
             <Legend wrapperStyle={{color:C.gray, fontSize:11}} />
             <Bar dataKey="local"  name="Local"   fill={C.greenL} radius={[3,3,0,0]} />
@@ -1061,7 +1178,7 @@ function SecBanco({ d }) {
             display:"grid", gridTemplateColumns:"34px 1fr 64px 64px 64px 64px",
             alignItems:"center", gap:10
           }}>
-            <span style={{ background:POS_COLOR[j.p], color:C.white, fontSize:10,
+            <span style={{ background:POS_COLOR[j.p]||C.gray, color:C.white, fontSize:10,
                            fontWeight:800, padding:"3px 0", borderRadius:4, textAlign:"center" }}>{j.p}</span>
             <div>
               <div style={{ color:C.cream, fontWeight:700, fontSize:13 }}>{j.n}</div>
@@ -1079,12 +1196,11 @@ function SecBanco({ d }) {
               <div style={{ color:C.gray, fontSize:9 }}>Rat.Sup</div>
               <div style={{ color:j.rat>=7.5?C.gold:C.cream, fontWeight:700, fontSize:14 }}>{j.rat}</div>
             </div>
-            {/* Micro bar */}
             <div style={{ height:40, display:"flex", alignItems:"flex-end" }}>
               <div style={{ width:"100%", background:`${C.white}08`, borderRadius:4, height:40, overflow:"hidden",
                             display:"flex", alignItems:"flex-end" }}>
                 <div style={{ background:i===0?C.gold:i===1?C.greenL:C.blue,
-                              width:"100%", height:`${j.impT/6*100}%`, transition:"height 0.5s ease" }} />
+                              width:"100%", height:`${Math.max(j.impT/6*100,2)}%`, transition:"height 0.5s ease" }} />
               </div>
             </div>
           </div>
@@ -1121,7 +1237,7 @@ function SecForma({ d }) {
             <ReferenceLine y={7} stroke={C.gold} strokeDasharray="4 4" strokeOpacity={0.5} />
             <Legend wrapperStyle={{color:C.gray, fontSize:10}} />
             <Bar dataKey="prev" name="J1–J7" fill={`${C.white}25`} radius={[3,3,0,0]} />
-            <Bar dataKey="ult"  name="J8–J10" radius={[3,3,0,0]}>
+            <Bar dataKey="ult"  name="J8–J14" radius={[3,3,0,0]}>
               {chartData.map((e,i) => <Cell key={i} fill={e.d>=0 ? C.greenL : C.redL} />)}
             </Bar>
           </BarChart>
@@ -1177,7 +1293,7 @@ const SECTIONS = [
 ];
 
 export default function App() {
-  const [equipo, setEquipo] = useState("Toluca");
+  const [equipo, setEquipo] = useState("Monterrey");
   const [showPicker, setShowPicker] = useState(false);
   const [active, setActive] = useState("resumen");
   const sectionRefs = useRef({});
@@ -1219,7 +1335,7 @@ export default function App() {
             <div style={{ color:C.gray, fontSize:11, marginTop:2 }}>{d.torneo}</div>
           </div>
           <div style={{ color:C.gray, fontSize:10, textAlign:"right", paddingTop:4 }}>
-            vs Pumas · referencia CL25
+            vs Pumas · referencia CL26
           </div>
         </div>
 
