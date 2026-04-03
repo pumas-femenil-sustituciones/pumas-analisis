@@ -709,7 +709,7 @@ const DATA = {
       { n:"Alejandra Calderon",            p:"D", prev:7.26, ult:7.12, d:-0.14 },
     ],
     alertas: [
-      "Si Monterrey anota primero: 11V 0E 0D (100%). El equipo mas letal del torneo tras el primer gol.",
+      "Si Monterrey anota primero: 11V 0E 0D (100%). Cuando marca primero no cede puntos.",
       "Como local nunca ha estado PERDIENDO (0%). Pumas recibe 5 GC en la franja 1-15'.",
       "Christina Burkenroad desde banca: 7.37 rating titular. Entrara a definir desde el min 60.",
     ],
@@ -730,7 +730,7 @@ const DATA = {
     notasGoles: [
       { tipo:"alerta", txt:"Franja 1-15': MTY 8 GF y 0 GC. Pumas recibe 5 GC en ese tramo. El inicio es critico." },
       { tipo:"alerta", txt:"Franja 31-45': MTY 9 GF. Ventana mas peligrosa. Coincide con 8 GF de Pumas historicamente." },
-      { tipo:"info",   txt:"Monterrey concede solo 4 GC en 14 partidos. La mejor diferencia defensiva (+31)." },
+      { tipo:"info",   txt:"Monterrey concede solo 4 GC en 14 partidos. Diferencia defensiva de +31." },
     ],
     notasLV: [
       { tipo:"alerta", txt:"Como local: GC:1 en 630 minutos. 74% del tiempo ganando. 0% perdiendo." },
@@ -750,10 +750,123 @@ const DATA = {
     ],
   },
 
+  // ─── PUEBLA FC — DATOS REALES CL26 ───────────────────────────
+  "Puebla FC": {
+    torneo: "Clausura 2026 · J1–J15",
+    status: "real",
+    record: { G:2, E:1, P:12, pts:7, pj:15, gf:6, gc:42 },
+    local:  { G:2, E:1, P:5,  pts:7, pj:8,  gf:6, gc:12 },
+    visita: { G:0, E:0, P:7,  pts:0, pj:7,  gf:0, gc:30 },
+    primeGol: { favor:"1V 0E 2D (anota ~24')", contra:"0V 3E 8D (recibe ~20')" },
+    minPGF: 24, minPGC: 20,
+    subsPorPartido: 4.7,
+    formaciones: [
+      { form:"1-4-2-3-1", pj:5, v:2, e:1, d:2, pts:7,  gf:5, gc:9, contexto:"Formación base J5–J9 · sus dos victorias (Santos, Atlas)" },
+      { form:"1-4-4-1-1", pj:2, v:0, e:1, d:1, pts:1,  gf:0, gc:4, contexto:"Últimas 2J (J14-J15) · mayor compacidad defensiva" },
+      { form:"1-4-2-1-3", pj:2, v:0, e:0, d:2, pts:0,  gf:0, gc:5, contexto:"J12-J13 · sin rendimiento ofensivo" },
+      { form:"1-4-3-1-2", pj:1, v:0, e:0, d:1, pts:0,  gf:0, gc:2, contexto:"J11 como visitante" },
+    ],
+    gamestates: {
+      global: { gan:9.2,  emp:28.2, per:62.6 },
+      local:  { gan:17.2, emp:45.7, per:37.1 },
+      visita: { gan:0.0,  emp:8.3,  per:91.7 },
+    },
+    franjasSubs: [
+      { franja:"1-30'",  n:1,  imp:0.00  },
+      { franja:"31-45'", n:2,  imp:-0.50 },
+      { franja:"46-60'", n:18, imp:-0.06 },
+      { franja:"61-75'", n:25, imp:0.08  },
+      { franja:"76-90'", n:25, imp:0.24  },
+    ],
+    heatmap: [
+      { tipo:"Ofensivo",  gan:{n:1,imp:0.00}, emp:{n:3,imp:-0.67}, per:{n:5,imp:0.00} },
+      { tipo:"Medio",     gan:{n:3,imp:0.00}, emp:{n:9,imp:0.33},  per:{n:43,imp:0.07} },
+      { tipo:"Defensivo", gan:{n:1,imp:0.00}, emp:{n:1,imp:2.00},  per:{n:5,imp:0.00} },
+    ],
+    franjasGoles: [
+      { f:"1-15'",  gf:2, gc:13, pumGF:0, pumGC:4 },
+      { f:"16-30'", gf:1, gc:3,  pumGF:4, pumGC:4 },
+      { f:"31-45'", gf:0, gc:8,  pumGF:6, pumGC:3 },
+      { f:"46-60'", gf:1, gc:6,  pumGF:1, pumGC:4 },
+      { f:"61-75'", gf:1, gc:6,  pumGF:3, pumGC:4 },
+      { f:"76-90'", gf:1, gc:6,  pumGF:2, pumGC:6 },
+    ],
+    banco: [
+      { n:"Sarah Huchet",       p:"M", ent:4,  impT:3,  impP:0.75,  rat:6.53, gs:"Perdiendo" },
+      { n:"A.J. Oviedo Reyes",  p:"F", ent:4,  impT:2,  impP:0.50,  rat:6.55, gs:"Perdiendo" },
+      { n:"Jetzuvely González", p:"D", ent:4,  impT:2,  impP:0.50,  rat:6.33, gs:"Perdiendo" },
+      { n:"Fátima Rosales",     p:"D", ent:4,  impT:2,  impP:0.50,  rat:6.47, gs:"Perdiendo" },
+      { n:"Johana Rosas",       p:"M", ent:7,  impT:2,  impP:0.29,  rat:6.49, gs:"Perdiendo" },
+      { n:"Ianne López",        p:"D", ent:3,  impT:0,  impP:0.00,  rat:6.47, gs:"Perdiendo" },
+    ],
+    xi: [
+      { n:"Jaidy Gutiérrez",     p:"G", pj:"6/7", rat:6.43, nota:"En alza (+1.28 J13-J15). Cae -0.90 de visita vs local." },
+      { n:"Miriam García",       p:"D", pj:"7/7", rat:6.19, nota:"Única defensora titular en los 7 PJ de visita. -0.55 de visita." },
+      { n:"Jaqueline González",  p:"D", pj:"7/7", rat:6.14, nota:"Bloque bajo. -0.55 de visita vs local." },
+      { n:"Liliana Fernández",   p:"D", pj:"7/7", rat:6.11, nota:"Lateral. Pierde profundidad ofensiva de visita (-0.56)." },
+      { n:"Fátima Rosales",      p:"D", pj:"5/7", rat:6.12, nota:"Sale de zona por duelos. También usada como suplente defensiva (~74')." },
+      { n:"Karyme Martínez",     p:"D", pj:"4/7", rat:5.90, nota:"⚑ Rating más bajo del XI visitante. Defensora adicional sin impacto." },
+      { n:"Rubí Villegas",       p:"M", pj:"7/7", rat:6.39, nota:"Pivote disciplinada. -0.50 de visita vs local." },
+      { n:"Yulexi Díaz Nevarez", p:"M", pj:"5/7", rat:6.06, nota:"La que más pierde nivel de visita (-0.44). Sale empatando 2x." },
+      { n:"Abigail Lopez",       p:"M", pj:"6/7", rat:6.38, nota:"Motor ofensivo en baja forma (-0.43 J13-J15). Sale empatando 2x." },
+      { n:"Luisa De Alba",       p:"F", pj:"6/7", rat:6.50, nota:"Referencia frontal. Solo 1 GF en el torneo. Δ L/V mínimo (+0.20)." },
+      { n:"A.J. Oviedo Reyes",   p:"F", pj:"3/7", rat:6.30, nota:"Segunda punta rotativa. Entra también desde el banco." },
+    ],
+    forma: [
+      { n:"J. Gutiérrez",    p:"G", prev:6.67, ult:7.95, d:+1.28 },
+      { n:"J. Solis",        p:"M", prev:6.54, ult:6.73, d:+0.19 },
+      { n:"M. García",       p:"D", prev:6.44, ult:6.63, d:+0.19 },
+      { n:"L. Fernández",    p:"D", prev:6.36, ult:6.50, d:+0.14 },
+      { n:"Y. Díaz Nevarez", p:"M", prev:6.29, ult:6.40, d:+0.11 },
+      { n:"J. González",     p:"D", prev:6.42, ult:6.47, d:+0.04 },
+      { n:"R. Villegas",     p:"M", prev:6.64, ult:6.63, d:-0.01 },
+      { n:"A. Lopez",        p:"M", prev:6.80, ult:6.37, d:-0.43 },
+    ],
+    alertas: [
+      "Sin victorias ni goles como visitante en todo el torneo: 0G 0E 7P · 0 GF · 30 GC en 7 partidos.",
+      "Cuando el rival marca primero (11 PJ): 0V 3E 8D · 3 pts de 33 posibles. El primer gol es determinante.",
+      "Franja 1-15': Puebla recibe 13 GC (31% de sus 42). Pumas no ha anotado en esa franja como local — presión alta sin explotar.",
+    ],
+    hallazgos: [
+      "Pumas anota 6 GF en 31-45' como local · Puebla recibe 8 GC en esa misma franja — el cruce más rentable del análisis.",
+      "Par Yulexi Díaz → Fátima Rosales (~74', Defensivo, imp +1.00): el único cambio con impacto positivo consistente. Señal de cierre a 5 atrás.",
+      "Abigail Lopez: motor ofensivo en baja forma (-0.43 últimas 3J) y la que más sale empatando (2x).",
+      "Sheila Vivanco Escamilla (10 entradas, imp -0.10): la suplente más usada con impacto negativo. No cambia el partido.",
+      "Sarah Huchet: mejor del banco (+0.75 imp/entrada). Sus 4 entradas coinciden con los partidos donde Puebla sumó puntos.",
+      "DT Morales cambia de formación partido a partido de visita: sin identidad táctica fuera de casa (6 esquemas en 7 PJ).",
+      "Jaidy Gutiérrez en alza pronunciada (+1.28): su mejor momento del torneo, aunque baja -0.90 de visita.",
+    ],
+    notasSubs: [
+      { tipo:"alerta", txt:"43 de 71 cambios se hacen PERDIENDO. La gestión de suplentes es reactiva, no táctica." },
+      { tipo:"alerta", txt:"Ofensivo empatando: −0.67 imp (n=3) — los cambios ofensivos cuando el marcador está igualado cuestan goles." },
+      { tipo:"info",   txt:"Franjas 61-90': 50 de 71 cambios. El DT interviene tarde y en bloque, no de forma escalonada." },
+    ],
+    notasGoles: [
+      { tipo:"alerta", txt:"Franja 1-15': Puebla recibe 13 GC · Pumas no anota en ese tramo como local. Presión alta puede ser determinante." },
+      { tipo:"alerta", txt:"Franja 31-45': Pumas anota 6 GF (franja más alta local) · Puebla recibe 8 GC (su franja más porosa). El partido se rompe ahí." },
+      { tipo:"info",   txt:"Puebla ha anotado 0 goles en 7 partidos de visita. No hay franja de peligro ofensivo real como visitante." },
+    ],
+    notasLV: [
+      { tipo:"info",   txt:"Como local: 2G 1E 5P · 0.88 pts/PJ · GF:6 GC:12. Sus únicos puntos vienen en casa." },
+      { tipo:"alerta", txt:"Como visitante: 0G 0E 7P · 0 pts · GF:0 GC:30. Sin marcar ni sumar un punto fuera en todo el torneo." },
+      { tipo:"alerta", txt:"Gamestate visita: 91.7% del tiempo PERDIENDO · 0% GANANDO. Condición estructuralmente adversa." },
+    ],
+    notasBanco: [
+      { tipo:"info",   txt:"Sarah Huchet (+0.75 imp/entrada): carta más efectiva del banco · sus 4 entradas coinciden con los 3 pts de Puebla como visitante." },
+      { tipo:"alerta", txt:"Sheila Vivanco (10 entradas, imp -0.10): la más usada con impacto negativo. Consolida bloque bajo sin buscar el gol." },
+      { tipo:"info",   txt:"Par clave: Yulexi Díaz → Fátima Rosales (~74', Defensivo, imp +1.00). Señal clara de cierre a 5 defensoras." },
+    ],
+    notasForma: [
+      { tipo:"info",   txt:"Jaidy Gutiérrez (+1.28): alza más pronunciada del equipo. Llega en su mejor momento aunque baja -0.90 de visita." },
+      { tipo:"alerta", txt:"Abigail Lopez (−0.43): la jugadora más determinante llega en baja forma. Rendimiento de visita ya era -0.57 vs local." },
+      { tipo:"info",   txt:"Miriam García y Joselyn Solis (+0.19 cada una): leve mejora en defensoras centrales y mediocampistas." },
+    ],
+  },
+
   ...["Chivas","América",
     "Atlas","Pachuca","Santos Laguna","Necaxa","FC Juárez",
     "Querétaro","Atlético de San Luis","Cruz Azul",
-    "Puebla FC","Mazatlán FC","Xolas"
+    "Mazatlán FC","Xolas"
   ].reduce((acc, eq) => {
     acc[eq] = {
       torneo: "Clausura 2026",
@@ -859,7 +972,7 @@ function SecResumen({ d }) {
           <BarChart data={gsData} margin={{top:5,right:10,left:-15,bottom:0}} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke={`${C.white}08`} vertical={false} />
             <XAxis dataKey="name" tick={{fill:C.cream, fontSize:12}} axisLine={false} tickLine={false} />
-            <YAxis tick={{fill:C.gray, fontSize:10}} axisLine={false} tickLine={false} unit="%" domain={[0,80]} />
+            <YAxis tick={{fill:C.gray, fontSize:10}} axisLine={false} tickLine={false} unit="%" domain={[0,100]} />
             <TT formatter={v=>`${v}%`} />
             <Legend wrapperStyle={{color:C.gray, fontSize:11}} />
             <Bar dataKey="global" name="Global"  fill={C.gold}  radius={[3,3,0,0]} />
@@ -967,7 +1080,7 @@ function SecSubs({ d }) {
             <XAxis dataKey="franja" tick={{fill:C.cream, fontSize:11}} axisLine={false} tickLine={false} />
             <YAxis yAxisId="l" tick={{fill:C.gray, fontSize:10}} axisLine={false} tickLine={false} />
             <YAxis yAxisId="r" orientation="right" tick={{fill:C.goldL, fontSize:10}} axisLine={false}
-                   tickLine={false} domain={[-0.5,2.5]} />
+                   tickLine={false} domain={[-1,3]} />
             <TT />
             <Bar yAxisId="l" dataKey="n" name="N° subs" radius={[4,4,0,0]}>
               {d.franjasSubs?.map((e,i) => (
@@ -1004,8 +1117,8 @@ function SecSubs({ d }) {
                 {["gan","emp","per"].map(gs => {
                   const cell = row[gs];
                   const v = cell.imp;
-                  const bg = v>=1.5?`${C.green}55`:v>=0.5?`${C.gold}30`:v>0?`${C.gold}14`:`${C.white}06`;
-                  const tc = v>=1.5?C.greenL:v>=0.5?C.gold:C.gray;
+                  const bg = v>=1.5?`${C.green}55`:v>=0.5?`${C.gold}30`:v>0?`${C.gold}14`:v<0?`${C.red}20`:`${C.white}06`;
+                  const tc = v>=1.5?C.greenL:v>=0.5?C.gold:v<0?C.redL:C.gray;
                   return (
                     <td key={gs} style={{ background:bg, borderRadius:6, padding:"10px", textAlign:"center", minWidth:90 }}>
                       <div style={{ color:tc, fontSize:18, fontWeight:800 }}>{v>=0?`+${v.toFixed(2)}`:v.toFixed(2)}</div>
@@ -1143,7 +1256,7 @@ function SecLocalVisita({ d }) {
           <BarChart data={gsComp} margin={{top:5,right:10,left:-15,bottom:0}} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke={`${C.white}08`} vertical={false} />
             <XAxis dataKey="name" tick={{fill:C.cream, fontSize:11}} axisLine={false} tickLine={false} />
-            <YAxis tick={{fill:C.gray, fontSize:10}} axisLine={false} tickLine={false} unit="%" domain={[0,80]} />
+            <YAxis tick={{fill:C.gray, fontSize:10}} axisLine={false} tickLine={false} unit="%" domain={[0,100]} />
             <TT formatter={v=>`${v}%`} />
             <Legend wrapperStyle={{color:C.gray, fontSize:11}} />
             <Bar dataKey="local"  name="Local"   fill={C.greenL} radius={[3,3,0,0]} />
@@ -1186,11 +1299,17 @@ function SecBanco({ d }) {
             </div>
             <div style={{ textAlign:"center" }}>
               <div style={{ color:C.gray, fontSize:9 }}>Imp.Total</div>
-              <div style={{ color:C.gold, fontWeight:800, fontSize:17 }}>+{j.impT}</div>
+              <div style={{ color: j.impT > 0 ? C.gold : j.impT < 0 ? C.redL : C.gray,
+                            fontWeight:800, fontSize:17 }}>
+                {j.impT >= 0 ? `+${j.impT}` : j.impT}
+              </div>
             </div>
             <div style={{ textAlign:"center" }}>
               <div style={{ color:C.gray, fontSize:9 }}>Imp.Prom</div>
-              <div style={{ color:j.impP>=1.5?C.redL:C.cream, fontWeight:700, fontSize:14 }}>+{j.impP.toFixed(2)}</div>
+              <div style={{ color: j.impP>=1.5 ? C.redL : j.impP < 0 ? C.redL : C.cream,
+                            fontWeight:700, fontSize:14 }}>
+                {j.impP >= 0 ? `+${j.impP.toFixed(2)}` : j.impP.toFixed(2)}
+              </div>
             </div>
             <div style={{ textAlign:"center" }}>
               <div style={{ color:C.gray, fontSize:9 }}>Rat.Sup</div>
@@ -1200,7 +1319,8 @@ function SecBanco({ d }) {
               <div style={{ width:"100%", background:`${C.white}08`, borderRadius:4, height:40, overflow:"hidden",
                             display:"flex", alignItems:"flex-end" }}>
                 <div style={{ background:i===0?C.gold:i===1?C.greenL:C.blue,
-                              width:"100%", height:`${Math.max(j.impT/6*100,2)}%`, transition:"height 0.5s ease" }} />
+                              width:"100%", height:`${Math.max(Math.abs(j.impT)/6*100,2)}%`,
+                              transition:"height 0.5s ease" }} />
               </div>
             </div>
           </div>
@@ -1225,7 +1345,7 @@ function SecForma({ d }) {
 
   return (
     <>
-      <Divider label="Forma Reciente — J8-J10 vs J1-J7" />
+      <Divider label="Forma Reciente — Últimas 3 jornadas" />
       <div style={{ height:230 }}>
         <ResponsiveContainer>
           <BarChart data={chartData} margin={{top:5,right:10,left:-15,bottom:32}} barCategoryGap="15%">
@@ -1236,8 +1356,8 @@ function SecForma({ d }) {
             <TT />
             <ReferenceLine y={7} stroke={C.gold} strokeDasharray="4 4" strokeOpacity={0.5} />
             <Legend wrapperStyle={{color:C.gray, fontSize:10}} />
-            <Bar dataKey="prev" name="J1–J7" fill={`${C.white}25`} radius={[3,3,0,0]} />
-            <Bar dataKey="ult"  name="J8–J14" radius={[3,3,0,0]}>
+            <Bar dataKey="prev" name="Referencia" fill={`${C.white}25`} radius={[3,3,0,0]} />
+            <Bar dataKey="ult"  name="Últimas 3J" radius={[3,3,0,0]}>
               {chartData.map((e,i) => <Cell key={i} fill={e.d>=0 ? C.greenL : C.redL} />)}
             </Bar>
           </BarChart>
